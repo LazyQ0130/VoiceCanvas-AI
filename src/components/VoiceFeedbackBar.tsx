@@ -1,11 +1,12 @@
 import { AlertCircle, LoaderCircle, Mic, Radio, Sparkles, Square } from "lucide-react";
 
-import type { VoiceState } from "../types";
+import type { DrawingMode, VoiceState } from "../types";
 
 type VoiceFeedbackBarProps = {
   voiceState: VoiceState;
   transcript: string;
   supported: boolean;
+  drawingMode: DrawingMode;
   onStart: () => void;
   onStop: () => void;
 };
@@ -48,10 +49,15 @@ export function VoiceFeedbackBar({
   voiceState,
   transcript,
   supported,
+  drawingMode,
   onStart,
   onStop,
 }: VoiceFeedbackBarProps) {
-  const copy = stateCopy[voiceState];
+  const copy = voiceState === "executing" && drawingMode === "ai"
+    ? { title: "AI 正在生成完整图片...", detail: "正在调用 FLUX 模型，请稍候" }
+    : voiceState === "idle" && drawingMode === "ai"
+      ? { title: "AI 图片模式待命中...", detail: "先描述画面，最后说“开始生成”" }
+      : stateCopy[voiceState];
   const active = voiceState === "listening";
 
   return (

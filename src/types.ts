@@ -1,4 +1,5 @@
 export type VoiceState = "idle" | "listening" | "processing" | "executing" | "error";
+export type DrawingMode = "canvas" | "ai";
 
 export type DrawOperation = {
   id: string;
@@ -25,6 +26,22 @@ export type CommandHistoryItem = {
   time: string;
   operationCount: number;
   keywords?: string[];
+};
+
+export type AiImageVersion = {
+  id: string;
+  prompt: string;
+  imageObjectUrl: string;
+  seed: number;
+  model: string;
+  createdAt: string;
+  inferenceMs: number;
+};
+
+export type AiHistoryState = {
+  versions: AiImageVersion[];
+  index: number;
+  current: AiImageVersion | null;
 };
 
 export type ToolState = {

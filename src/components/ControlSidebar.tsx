@@ -1,8 +1,8 @@
-import { Box, Braces, CheckCircle2, Circle, Clock3, Layers3, Lightbulb, Minus, Pentagon, Square } from "lucide-react";
+import { Box, Braces, CheckCircle2, Circle, Clock3, ImageIcon, Layers3, Lightbulb, Minus, Pentagon, Square } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { localizeCommand, localizeText } from "../localization";
-import type { CommandHistoryItem, DrawOperation, OperationGroup, ToolState } from "../types";
+import type { AiHistoryState, CommandHistoryItem, DrawOperation, DrawingMode, OperationGroup, ToolState } from "../types";
 import { OBJECT_LIBRARY } from "../objectLibrary.js";
 
 type ControlSidebarProps = {
@@ -15,6 +15,9 @@ type ControlSidebarProps = {
   sceneContext: ToolState;
   recognizedKeywords: string[];
   generatedObjects: string[];
+  drawingMode: DrawingMode;
+  aiDraftPrompt: string;
+  aiHistory: AiHistoryState;
 };
 
 const shapeMeta: Record<string, { name: string; icon: LucideIcon }> = {
@@ -61,6 +64,9 @@ export function ControlSidebar({
   sceneContext,
   recognizedKeywords,
   generatedObjects,
+  drawingMode,
+  aiDraftPrompt,
+  aiHistory,
 }: ControlSidebarProps) {
   const objects = objectList(groups);
   const weatherLabel = { clear: "晴朗", rain: "雨天", snow: "雪天" }[sceneContext.weather] ?? localizeText(sceneContext.weather);
@@ -75,13 +81,41 @@ export function ControlSidebar({
           <div>
             <p className="text-sm font-black tracking-tight text-white">控制中心</p>
             <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-              指令历史与画布对象
+              {drawingMode === "canvas" ? "指令历史与画布对象" : "提示词与图片版本"}
             </p>
           </div>
         </div>
       </header>
 
       <div className="scrollbar-thin flex-1 overflow-y-auto">
+        {drawingMode === "ai" && (
+          <section className="border-b border-white/8 px-4 py-5">
+            <div className="mb-3 flex items-center gap-2">
+              <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
+              <h2 className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">AI 生成状态</h2>
+            </div>
+            <p className="text-[9px] font-bold text-slate-500">待生成提示词</p>
+            <p className="mt-1 min-h-16 rounded-xl border border-violet-400/15 bg-violet-400/[0.04] p-3 text-[10px] leading-5 text-violet-200/80">
+              {aiDraftPrompt || "请说出画面描述，然后说“开始生成”"}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[9px] text-slate-500">
+              <span className="rounded-lg bg-white/[0.025] p-2">模型：FLUX.1-schnell</span>
+              <span className="rounded-lg bg-white/[0.025] p-2">版本：{aiHistory.versions.length}</span>
+              <span className="rounded-lg bg-white/[0.025] p-2">种子：{aiHistory.current?.seed ?? "--"}</span>
+              <span className="rounded-lg bg-white/[0.025] p-2">生成：{aiHistory.current?.inferenceMs ?? "--"} 毫秒</span>
+            </div>
+            {aiHistory.versions.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {aiHistory.versions.map((version, index) => (
+                  <div key={version.id} className={`rounded-lg border px-2.5 py-2 text-[9px] ${index === aiHistory.index ? "border-violet-400/30 bg-violet-400/8 text-violet-200" : "border-white/6 bg-white/[0.025] text-slate-500"}`}>
+                    版本 {index + 1} · Seed {version.seed} · {version.inferenceMs} 毫秒
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         <section className="border-b border-white/8 px-4 py-5">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -126,7 +160,7 @@ export function ControlSidebar({
           </div>
         </section>
 
-        <section className="border-b border-white/8 px-4 py-5">
+        {drawingMode === "canvas" && <section className="border-b border-white/8 px-4 py-5">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Layers3 className="h-3.5 w-3.5 text-violet-400" />
@@ -167,19 +201,25 @@ export function ControlSidebar({
               );
             })}
           </div>
-        </section>
+        </section>}
 
         <section className="border-b border-white/8 px-4 py-5">
           <div className="mb-3 flex items-center gap-2">
             <Lightbulb className="h-3.5 w-3.5 text-amber-300" />
-            <h2 className="text-[11px] font-black tracking-[0.16em] text-slate-300">高级语音示例</h2>
+            <h2 className="text-[11px] font-black tracking-[0.16em] text-slate-300">{drawingMode === "canvas" ? "高级语音示例" : "AI 语音示例"}</h2>
           </div>
           <div className="space-y-2 text-[10px] text-slate-400">
-            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">组合：“画一个夜晚校园，有月亮、星星、教学楼和树”</p>
-            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">追加：“再加一些花和气球”</p>
-            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">调整：“让画面更温暖”</p>
+            {drawingMode === "canvas" ? <>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">组合：“画一个夜晚校园，有月亮、星星、教学楼和树”</p>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">追加：“再加一些花和气球”</p>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">调整：“让画面更温暖”</p>
+            </> : <>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">描述：“画一座漂浮在云端的未来城市”</p>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">修改：“再加飞船，切换为赛博朋克风格”</p>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">确认：“开始生成”</p>
+            </>}
           </div>
-          <p className="mt-3 text-[9px] leading-relaxed text-slate-600">可识别素材：{Object.values(OBJECT_LIBRARY).map((item) => item.label).join("、")}</p>
+          {drawingMode === "canvas" && <p className="mt-3 text-[9px] leading-relaxed text-slate-600">可识别素材：{Object.values(OBJECT_LIBRARY).map((item) => item.label).join("、")}</p>}
         </section>
 
         <section className="px-4 py-5">
