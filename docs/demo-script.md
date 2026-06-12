@@ -1,4 +1,4 @@
-# VoiceCanvas AI Demo 视频讲解脚本（2–3 分钟）
+# VoiceCanvas AI 演示视频讲解脚本（2–3 分钟）
 
 ## 0:00–0:20 开场介绍
 

@@ -1,6 +1,6 @@
 # VoiceCanvas AI
 
-VoiceCanvas AI 是一个纯前端、纯语音控制的中文矢量绘图工具。界面采用 React、TypeScript、Vite 与 Tailwind CSS 构建为全屏 Voice-Driven Dashboard；用户点击一次按钮开启麦克风后，即可通过中文语音指令在 Canvas 上绘制、编辑和导出作品。
+VoiceCanvas AI 是一个纯前端、纯语音控制的中文矢量绘图工具。界面采用 React、TypeScript、Vite 与 Tailwind CSS 构建为全屏语音驱动仪表盘；用户点击一次按钮开启麦克风后，即可通过中文语音指令在 Canvas 上绘制、编辑和导出作品。
 
 ## 核心亮点
 

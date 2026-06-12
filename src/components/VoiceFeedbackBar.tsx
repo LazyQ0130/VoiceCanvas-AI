@@ -18,6 +18,14 @@ const stateCopy: Record<VoiceState, { title: string; detail: string }> = {
   error: { title: "未听清，请再说一次", detail: "请靠近麦克风，并保持指令简短清晰" },
 };
 
+const voiceStateNames: Record<VoiceState, string> = {
+  idle: "待命",
+  listening: "正在聆听",
+  processing: "正在理解",
+  executing: "正在创作",
+  error: "识别失败",
+};
+
 function Waveform({ active }: { active: boolean }) {
   return (
     <div className="flex h-10 w-20 items-center justify-center gap-1" aria-hidden="true">
@@ -105,8 +113,8 @@ export function VoiceFeedbackBar({
         </div>
 
         <div className="hidden rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-right md:block">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Voice state</p>
-          <p className="mt-0.5 text-xs font-bold uppercase text-cyan-300">{voiceState}</p>
+          <p className="text-[9px] font-black tracking-[0.2em] text-slate-500">语音状态</p>
+          <p className="mt-0.5 text-xs font-bold text-cyan-300">{voiceStateNames[voiceState]}</p>
         </div>
       </div>
     </div>

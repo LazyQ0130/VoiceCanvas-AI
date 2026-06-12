@@ -10,7 +10,7 @@ type VoiceCanvasProps = {
   onEngineReady: (engine: DrawingEngine) => void;
 };
 
-const gridLabels = ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"];
+const gridLabels = ["左上", "中上", "右上", "左中", "中心", "右中", "左下", "中下", "右下"];
 
 export function VoiceCanvas({ groups, showGrid, onEngineReady }: VoiceCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,7 +30,7 @@ export function VoiceCanvas({ groups, showGrid, onEngineReady }: VoiceCanvasProp
     <div className="relative flex min-h-0 flex-1 flex-col px-4 pb-28 pt-4 sm:px-7 sm:pb-32">
       <div className="mb-3 flex h-5 shrink-0 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
         <ScanLine className="h-3.5 w-3.5 text-cyan-400" />
-        Live creative surface
+        实时创作画布
       </div>
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
@@ -39,14 +39,14 @@ export function VoiceCanvas({ groups, showGrid, onEngineReady }: VoiceCanvasProp
             ref={canvasRef}
             width="960"
             height="620"
-            aria-label="VoiceCanvas 绘图画布"
+            aria-label="声绘智能画布绘图区"
             className="h-full w-full object-contain [image-rendering:auto]"
           />
 
           <div className="pointer-events-none absolute inset-0 rounded-[26px] ring-1 ring-inset ring-slate-950/10" />
           <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur-md">
             <Crosshair className="h-3 w-3 text-cyan-500" />
-            Voice coordinates enabled
+            语音定位已启用
           </div>
 
           <div

@@ -9,6 +9,7 @@ import { VoiceCanvas } from "./components/VoiceCanvas";
 import { VoiceFeedbackBar } from "./components/VoiceFeedbackBar";
 import { DrawingEngine } from "./drawingEngine.js";
 import { HistoryManager } from "./historyManager.js";
+import { localizeText } from "./localization";
 import { SpeechController } from "./speechController.js";
 import type { CommandHistoryItem, OperationGroup, ToolState, VoiceState } from "./types";
 
@@ -151,10 +152,10 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-black tracking-tight text-white">
-              VoiceCanvas <span className="text-cyan-300">AI</span>
+              声绘智能画布
             </h1>
             <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">
-              Voice-driven creative dashboard
+              全语音驱动创作仪表盘
             </p>
           </div>
         </div>
@@ -162,7 +163,7 @@ export default function App() {
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-[10px] text-slate-400 sm:flex">
             <Palette className="h-3.5 w-3.5" style={{ color: toolState.color }} />
-            <span className="font-bold text-slate-200">{toolState.color}</span>
+            <span className="font-bold text-slate-200">{localizeText(toolState.color)}</span>
             <span className="h-3 w-px bg-white/10" />
             <span>线宽 {toolState.lineWidth}</span>
           </div>
@@ -176,11 +177,11 @@ export default function App() {
             }`}
           >
             <Grid3X3 className="h-3.5 w-3.5" />
-            Grid
+            定位网格
           </button>
           <span className="hidden items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-400/8 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider text-emerald-300 md:flex">
             <Radio className="h-3 w-3" />
-            System ready
+            系统就绪
           </span>
         </div>
       </header>
@@ -196,7 +197,7 @@ export default function App() {
 
       <div className="pointer-events-none absolute bottom-7 left-7 hidden items-center gap-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600 xl:flex">
         <Sparkles className="h-3 w-3 text-violet-400/70" />
-        Say “画一个房子” to begin
+        试着说：“画一个房子”
       </div>
     </div>
   );

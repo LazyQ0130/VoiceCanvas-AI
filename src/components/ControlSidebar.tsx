@@ -1,5 +1,6 @@
 import { Box, Braces, CheckCircle2, Circle, Clock3, Layers3, Minus, Pentagon, Square } from "lucide-react";
 
+import { localizeCommand, localizeText } from "../localization";
 import type { CommandHistoryItem, DrawOperation, OperationGroup } from "../types";
 
 type ControlSidebarProps = {
@@ -52,9 +53,9 @@ export function ControlSidebar({
             <Layers3 className="h-5 w-5 text-violet-300" />
           </div>
           <div>
-            <p className="text-sm font-black tracking-tight text-white">Control Console</p>
+            <p className="text-sm font-black tracking-tight text-white">控制中心</p>
             <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-              History & objects
+              指令历史与画布对象
             </p>
           </div>
         </div>
@@ -66,7 +67,7 @@ export function ControlSidebar({
             <div className="flex items-center gap-2">
               <Clock3 className="h-3.5 w-3.5 text-cyan-400" />
               <h2 className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
-                Command History
+                指令历史
               </h2>
             </div>
             <span className="rounded-full bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
@@ -109,10 +110,10 @@ export function ControlSidebar({
             <div className="flex items-center gap-2">
               <Layers3 className="h-3.5 w-3.5 text-violet-400" />
               <h2 className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
-                Object Inspector
+                对象检查器
               </h2>
             </div>
-            <span className="text-[10px] font-bold text-slate-500">{objects.length + 1} layers</span>
+            <span className="text-[10px] font-bold text-slate-500">{objects.length + 1} 个图层</span>
           </div>
 
           <div className="space-y-1.5">
@@ -122,7 +123,7 @@ export function ControlSidebar({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-slate-300">背景层</p>
-                <p className="text-[9px] uppercase tracking-wider text-slate-600">Canvas background</p>
+                <p className="text-[9px] tracking-wider text-slate-600">画布背景</p>
               </div>
               <span className="rounded-md bg-slate-800 px-1.5 py-1 text-[9px] font-bold text-slate-500">固定</span>
             </div>
@@ -136,7 +137,7 @@ export function ControlSidebar({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-slate-300">{object.name}</p>
-                    <p className="text-[9px] text-slate-600">{object.color}</p>
+                    <p className="text-[9px] text-slate-600">{localizeText(object.color)}</p>
                   </div>
                   <span className="rounded-md border border-violet-400/15 bg-violet-400/8 px-1.5 py-1 text-[9px] font-bold text-violet-300">
                     唤醒：{object.wakeWord}
@@ -151,18 +152,18 @@ export function ControlSidebar({
           <div className="mb-3 flex items-center gap-2">
             <Braces className="h-3.5 w-3.5 text-blue-400" />
             <h2 className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
-              Intent Monitor
+              意图监视器
             </h2>
           </div>
           <pre className="max-h-36 overflow-auto rounded-xl border border-white/6 bg-black/20 p-3 text-[10px] leading-relaxed text-blue-200/70">
-            {parsedCommand ? JSON.stringify(parsedCommand, null, 2) : "等待结构化指令..."}
+            {parsedCommand ? JSON.stringify(localizeCommand(parsedCommand), null, 2) : "等待结构化指令..."}
           </pre>
           <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
             <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2 text-[10px] text-slate-400">
               {executionResult}
             </p>
             <span className="rounded-lg border border-cyan-400/10 bg-cyan-400/5 px-2.5 py-2 text-[10px] font-bold text-cyan-300">
-              {latency ?? "--"} ms
+              {latency ?? "--"} 毫秒
             </span>
           </div>
         </section>
