@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="VoiceCanvas AI - 通过中文语音指令控制 Canvas 完成矢量绘图"
+    />
+    <title>VoiceCanvas AI</title>
+    <link rel="stylesheet" href="./styles/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">VOICE-FIRST CREATIVE TOOL</p>
+          <h1>VoiceCanvas <span>AI</span></h1>
+          <p class="subtitle">只用声音，也能完成绘图创作</p>
+        </div>
+        <div class="hero-badge">
+          <span class="status-dot" id="heroStatusDot"></span>
+          <span id="heroStatusText">等待开启语音控制</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="canvas-panel panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">CREATIVE STAGE</p>
+              <h2>语音画布</h2>
+            </div>
+            <div class="tool-state">
+              <span><i class="color-chip" id="colorChip"></i><b id="currentColor">red</b></span>
+              <span>线宽 <b id="currentLineWidth">4</b></span>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="drawingCanvas" width="960" height="620">
+              当前浏览器不支持 Canvas。
+            </canvas>
+            <div class="listening-overlay" id="listeningOverlay">
+              <span class="voice-ring"></span>
+              正在聆听，请说出绘图指令
+            </div>
+          </div>
+          <div class="voice-controls">
+            <button class="button button-primary" id="startButton">
+              <span class="button-icon">●</span>
+              开始语音控制
+            </button>
+            <button class="button button-secondary" id="stopButton" disabled>
+              <span class="button-icon">■</span>
+              停止语音控制
+            </button>
+          </div>
+          <p class="compatibility-message" id="compatibilityMessage"></p>
+        </div>
+
+        <aside class="inspector">
+          <section class="panel status-card">
+            <div class="panel-heading compact">
+              <div>
+                <p class="section-label">LIVE FEEDBACK</p>
+                <h2>指令状态</h2>
+              </div>
+              <span class="status-pill" id="statusPill">待机</span>
+            </div>
+
+            <div class="feedback-grid">
+              <article class="feedback-item">
+                <span>原始识别文本</span>
+                <p id="rawTranscript">等待语音输入…</p>
+              </article>
+              <article class="feedback-item">
+                <span>结构化指令</span>
+                <pre id="parsedCommand">暂无指令</pre>
+              </article>
+              <article class="feedback-item">
+                <span>执行结果</span>
+                <p id="executionResult">尚未执行操作</p>
+              </article>
+              <article class="feedback-item latency">
+                <span>响应耗时</span>
+                <strong><b id="latencyValue">--</b> ms</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel log-panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="section-label">ACTIVITY</p>
+                <h2>操作日志</h2>
+              </div>
+              <span class="log-count" id="logCount">0</span>
+            </div>
+            <div class="log-list" id="logList">
+              <p class="empty-log">语音指令将在这里留下记录</p>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="panel examples-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">SAY IT, DRAW IT</p>
+            <h2>试着这样说</h2>
+          </div>
+          <p class="examples-note">所有绘图操作均通过语音完成</p>
+        </div>
+        <div class="example-grid">
+          <article><b>基础形状</b><span>“在 300 200 画一个半径 60 的绿色圆”</span></article>
+          <article><b>精确绘制</b><span>“从 100 100 到 300 300 画一条红色线”</span></article>
+          <article><b>复合创作</b><span>“画一个房子” “画一个笑脸” “画一个太阳”</span></article>
+          <article><b>编辑控制</b><span>“撤销” “重做” “清空画布” “保存图片”</span></article>
+          <article><b>画笔设置</b><span>“设置颜色为紫色” “设置线宽为 8”</span></article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
