@@ -13,7 +13,7 @@ test("AI voice commands switch modes and defer generation until confirmation", (
   assert.equal(parseAiCommand("开始生成").action, "generate");
   assert.equal(parseAiCommand("重新生成").action, "regenerate");
   assert.equal(parseAiCommand("取消本次修改").action, "cancelDraft");
-  assert.equal(isImmediateAiAction("开始生成"), true);
+  assert.equal(isImmediateAiAction("开始生成"), false);
   assert.equal(isImmediateAiAction("画一座未来城市"), false);
 });
 

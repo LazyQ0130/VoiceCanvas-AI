@@ -18,6 +18,9 @@ type ControlSidebarProps = {
   drawingMode: DrawingMode;
   aiDraftPrompt: string;
   aiHistory: AiHistoryState;
+  aiGenerating: boolean;
+  onGenerate: () => void;
+  onRegenerate: () => void;
 };
 
 const shapeMeta: Record<string, { name: string; icon: LucideIcon }> = {
@@ -67,6 +70,9 @@ export function ControlSidebar({
   drawingMode,
   aiDraftPrompt,
   aiHistory,
+  aiGenerating,
+  onGenerate,
+  onRegenerate,
 }: ControlSidebarProps) {
   const objects = objectList(groups);
   const weatherLabel = { clear: "晴朗", rain: "雨天", snow: "雪天" }[sceneContext.weather] ?? localizeText(sceneContext.weather);
@@ -96,8 +102,29 @@ export function ControlSidebar({
             </div>
             <p className="text-[9px] font-bold text-slate-500">待生成提示词</p>
             <p className="mt-1 min-h-16 rounded-xl border border-violet-400/15 bg-violet-400/[0.04] p-3 text-[10px] leading-5 text-violet-200/80">
-              {aiDraftPrompt || "请说出画面描述，然后说“开始生成”"}
+              {aiDraftPrompt || "请说出画面描述，然后点击“确认并生成”"}
             </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={onGenerate}
+                disabled={aiGenerating || !aiDraftPrompt.trim()}
+                className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl border border-violet-300/30 bg-violet-500/80 px-3 py-2.5 text-[10px] font-black text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+                {aiGenerating ? "正在生成..." : "确认并生成"}
+              </button>
+              {aiHistory.current && (
+                <button
+                  type="button"
+                  onClick={onRegenerate}
+                  disabled={aiGenerating || !aiDraftPrompt.trim()}
+                  className="col-span-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-[10px] font-bold text-slate-300 transition hover:border-violet-300/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  使用当前提示词重新生成
+                </button>
+              )}
+            </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[9px] text-slate-500">
               <span className="rounded-lg bg-white/[0.025] p-2">模型：Kwai-Kolors/Kolors</span>
               <span className="rounded-lg bg-white/[0.025] p-2">版本：{aiHistory.versions.length}</span>
@@ -216,7 +243,7 @@ export function ControlSidebar({
             </> : <>
               <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">描述：“画一座漂浮在云端的未来城市”</p>
               <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">修改：“再加飞船，切换为赛博朋克风格”</p>
-              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">确认：“开始生成”</p>
+              <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">确认：点击“确认并生成”按钮</p>
             </>}
           </div>
           {drawingMode === "canvas" && <p className="mt-3 text-[9px] leading-relaxed text-slate-600">可识别素材：{Object.values(OBJECT_LIBRARY).map((item) => item.label).join("、")}</p>}

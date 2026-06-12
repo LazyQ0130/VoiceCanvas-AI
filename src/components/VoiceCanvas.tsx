@@ -10,12 +10,25 @@ type VoiceCanvasProps = {
   drawingMode: DrawingMode;
   aiImage: AiImageVersion | null;
   aiGenerating: boolean;
+  canGenerate: boolean;
+  onGenerate: () => void;
+  onRegenerate: () => void;
   onEngineReady: (engine: DrawingEngine) => void;
 };
 
 const gridLabels = ["左上", "中上", "右上", "左中", "中心", "右中", "左下", "中下", "右下"];
 
-export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerating, onEngineReady }: VoiceCanvasProps) {
+export function VoiceCanvas({
+  groups,
+  showGrid,
+  drawingMode,
+  aiImage,
+  aiGenerating,
+  canGenerate,
+  onGenerate,
+  onRegenerate,
+  onEngineReady,
+}: VoiceCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<DrawingEngine | null>(null);
 
@@ -61,7 +74,7 @@ export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerati
               </div>
               <p className="mt-5 text-base font-black text-white">等待生成完整 AI 图片</p>
               <p className="mt-2 max-w-md text-xs leading-6 text-slate-400">
-                先说出画面描述和修改要求，确认后说“开始生成”
+                先说出画面描述和修改要求，再点击“确认并生成”
               </p>
             </div>
           )}
@@ -73,6 +86,29 @@ export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerati
                 AI 正在生成完整图片
               </p>
               <p className="mt-2 text-xs text-slate-400">通常需要数秒，请保持页面开启</p>
+            </div>
+          )}
+          {drawingMode === "ai" && !aiGenerating && (
+            <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
+              {aiImage && (
+                <button
+                  type="button"
+                  onClick={onRegenerate}
+                  disabled={!canGenerate}
+                  className="rounded-xl border border-white/15 bg-slate-950/75 px-3 py-2 text-[10px] font-black text-slate-200 shadow-lg backdrop-blur-md transition hover:border-violet-300/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  重新生成
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onGenerate}
+                disabled={!canGenerate}
+                className="flex items-center gap-1.5 rounded-xl border border-violet-300/35 bg-violet-500/85 px-4 py-2 text-[10px] font-black text-white shadow-[0_12px_32px_rgba(124,58,237,0.35)] transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {aiImage ? "确认修改并生成" : "确认并生成"}
+              </button>
             </div>
           )}
 

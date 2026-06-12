@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AiHistoryManager } from "./aiHistoryManager.js";
 import { generateAiImage, saveAiImage } from "./aiImageClient.js";
-import { buildGenerationPrompt, isImmediateAiAction, mergePrompt, parseAiCommand, parseModeCommand } from "./aiPromptController.js";
+import { buildGenerationPrompt, mergePrompt, parseAiCommand, parseModeCommand } from "./aiPromptController.js";
 import { CommandExecutor } from "./commandExecutor.js";
 import { CommandParser } from "./commandParser.js";
 import { ControlSidebar } from "./components/ControlSidebar";
@@ -44,7 +44,6 @@ export default function App() {
   const drawingModeRef = useRef<DrawingMode>("canvas");
   const aiDraftRef = useRef("");
   const aiGeneratingRef = useRef(false);
-  const interimActionTimerRef = useRef<number | null>(null);
   const lastExecutedTranscriptRef = useRef({ text: "", at: 0 });
   const historyRef = useRef(
     new HistoryManager((nextGroups: OperationGroup[]) => setGroups([...nextGroups])),
@@ -81,7 +80,7 @@ export default function App() {
 
   const executeAiGeneration = useCallback(async (prompt: string, rawText: string) => {
     if (!prompt.trim()) {
-      showError("请先描述想生成的画面，再说“开始生成”");
+      showError("请先描述想生成的画面，再点击“确认并生成”");
       return;
     }
     const startedAt = performance.now();
@@ -107,7 +106,7 @@ export default function App() {
       setExecutionResult(message);
       setLatency(Math.round(performance.now() - startedAt));
       addHistoryItem("ai", rawText, message, 1, ["Kwai-Kolors/Kolors"]);
-      setVoiceState("listening");
+      setVoiceState("idle");
     } catch (error) {
       showError(error instanceof Error ? error.message : "AI 图片生成失败，请稍后重试");
     } finally {
@@ -124,11 +123,6 @@ export default function App() {
       now - lastExecutedTranscriptRef.current.at < 2500
     ) return;
     lastExecutedTranscriptRef.current = { text: normalizedTranscript, at: now };
-    if (interimActionTimerRef.current) {
-      window.clearTimeout(interimActionTimerRef.current);
-      interimActionTimerRef.current = null;
-    }
-
     const startedAt = performance.now();
     setTranscript(finalTranscript);
     setVoiceState("processing");
@@ -153,7 +147,7 @@ export default function App() {
         const nextPrompt = mergePrompt(aiDraftRef.current, command.text);
         aiDraftRef.current = nextPrompt;
         setAiDraftPrompt(nextPrompt);
-        setExecutionResult("描述已加入提示词，请继续描述或说“开始生成”");
+        setExecutionResult("描述已加入提示词，请继续描述或点击“确认并生成”");
         addHistoryItem("ai", finalTranscript, "已加入待生成提示词", 0);
         setLatency(Math.round(performance.now() - startedAt));
         setVoiceState("listening");
@@ -161,10 +155,15 @@ export default function App() {
       }
 
       const action = command.action;
-      if (action === "generate") return executeAiGeneration(aiDraftRef.current, finalTranscript);
-      if (action === "regenerate") {
-        const prompt = aiDraftRef.current || aiHistoryRef.current.current?.prompt || "";
-        return executeAiGeneration(prompt, finalTranscript);
+      if (action === "generate" || action === "regenerate") {
+        const message = action === "generate"
+          ? "已识别生成意图，请点击“确认并生成”按钮"
+          : "已识别重新生成意图，请点击“重新生成”按钮";
+        setExecutionResult(message);
+        addHistoryItem("ai", finalTranscript, message, 0);
+        setLatency(Math.round(performance.now() - startedAt));
+        setVoiceState("listening");
+        return;
       }
       if (action === "undo" || action === "redo") {
         const changed = aiHistoryRef.current[action]();
@@ -236,13 +235,6 @@ export default function App() {
           executeTranscript(text);
           return;
         }
-        if (drawingModeRef.current === "ai" && isImmediateAiAction(text)) {
-          if (interimActionTimerRef.current) window.clearTimeout(interimActionTimerRef.current);
-          interimActionTimerRef.current = window.setTimeout(() => executeTranscript(text), 550);
-        } else if (interimActionTimerRef.current) {
-          window.clearTimeout(interimActionTimerRef.current);
-          interimActionTimerRef.current = null;
-        }
       },
       onStatusChange: (status: string) => {
         if (status === "listening") setVoiceState("listening");
@@ -269,7 +261,6 @@ export default function App() {
     return () => {
       speech.stop();
       if (errorTimerRef.current) window.clearTimeout(errorTimerRef.current);
-      if (interimActionTimerRef.current) window.clearTimeout(interimActionTimerRef.current);
       aiHistoryRef.current.versions.forEach((version: AiImageVersion) => URL.revokeObjectURL(version.imageObjectUrl));
     };
   }, [executeTranscript, showError]);
@@ -286,6 +277,17 @@ export default function App() {
     speechRef.current?.stop();
     setVoiceState("idle");
   }, []);
+
+  const confirmAiGeneration = useCallback(() => {
+    speechRef.current?.stop();
+    void executeAiGeneration(aiDraftRef.current, "手动确认生成");
+  }, [executeAiGeneration]);
+
+  const confirmAiRegeneration = useCallback(() => {
+    speechRef.current?.stop();
+    const prompt = aiDraftRef.current || aiHistoryRef.current.current?.prompt || "";
+    void executeAiGeneration(prompt, "手动重新生成");
+  }, [executeAiGeneration]);
 
   const objects = groups.flatMap((group) => group.operations);
   const recentObjectName = objects.at(-1)?.label ?? "暂无对象";
@@ -376,6 +378,9 @@ export default function App() {
         drawingMode={drawingMode}
         aiImage={aiHistory.current}
         aiGenerating={aiGenerating}
+        canGenerate={Boolean(aiDraftPrompt.trim())}
+        onGenerate={confirmAiGeneration}
+        onRegenerate={confirmAiRegeneration}
         onEngineReady={handleEngineReady}
       />
       <VoiceFeedbackBar
@@ -389,7 +394,7 @@ export default function App() {
 
       <div className="pointer-events-none absolute bottom-7 left-7 hidden items-center gap-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600 xl:flex">
         <Sparkles className="h-3 w-3 text-violet-400/70" />
-        {drawingMode === "canvas" ? "试着说：“画一个夜晚城市”" : "描述画面后说：“开始生成”"}
+        {drawingMode === "canvas" ? "试着说：“画一个夜晚城市”" : "描述画面后，点击“确认并生成”"}
       </div>
     </div>
   );
@@ -411,6 +416,9 @@ export default function App() {
           drawingMode={drawingMode}
           aiDraftPrompt={aiDraftPrompt}
           aiHistory={aiHistory}
+          aiGenerating={aiGenerating}
+          onGenerate={confirmAiGeneration}
+          onRegenerate={confirmAiRegeneration}
         />
       }
     />

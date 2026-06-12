@@ -56,7 +56,7 @@ export function VoiceFeedbackBar({
   const copy = voiceState === "executing" && drawingMode === "ai"
     ? { title: "AI 正在生成完整图片...", detail: "正在调用 Kolors 模型，请稍候" }
     : voiceState === "idle" && drawingMode === "ai"
-      ? { title: "AI 图片模式待命中...", detail: "先描述画面，最后说“开始生成”" }
+      ? { title: "AI 图片模式待命中...", detail: "先描述画面，再点击“确认并生成”" }
       : stateCopy[voiceState];
   const active = voiceState === "listening";
 

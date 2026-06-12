@@ -36,8 +36,6 @@ export function parseAiCommand(rawText) {
 export function isImmediateAiAction(rawText) {
   const command = parseAiCommand(rawText);
   return command.type === "aiAction" && [
-    "generate",
-    "regenerate",
     "undo",
     "redo",
     "clear",
