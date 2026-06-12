@@ -18,12 +18,25 @@ export class DrawingEngine {
     });
     const activeStyle = objects.at(-1)?.style ?? "default";
     const background = getStylePreset(activeStyle).background;
-    const gradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-    gradient.addColorStop(0, background[0]);
-    gradient.addColorStop(1, background.at(-1));
     ctx.save();
+    const gradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    background.forEach((color, index) => gradient.addColorStop(index / Math.max(background.length - 1, 1), color));
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    if (activeStyle === "default" && typeof ctx.createRadialGradient === "function") {
+      const glow = ctx.createRadialGradient(
+        this.canvas.width * 0.5,
+        this.canvas.height * 0.3,
+        0,
+        this.canvas.width * 0.5,
+        this.canvas.height * 0.3,
+        this.canvas.width * 0.65,
+      );
+      glow.addColorStop(0, "rgba(14, 165, 233, 0.12)");
+      glow.addColorStop(1, "rgba(14, 165, 233, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
     ctx.restore();
     objects.forEach((operation) => this.draw(operation));
   }
@@ -38,8 +51,9 @@ export class DrawingEngine {
     ctx.lineCap = operation.pixelated ? "butt" : "round";
     ctx.lineJoin = operation.pixelated ? "miter" : "round";
     ctx.imageSmoothingEnabled = !operation.pixelated;
-    ctx.shadowBlur = operation.shadowBlur ?? 0;
-    ctx.shadowColor = operation.color ?? "transparent";
+    const darkStrokeOnDefaultSurface = operation.style === "default" && this.isDarkColor(operation.color);
+    ctx.shadowBlur = darkStrokeOnDefaultSurface ? Math.max(operation.shadowBlur ?? 0, 8) : operation.shadowBlur ?? 0;
+    ctx.shadowColor = darkStrokeOnDefaultSurface ? "rgba(226, 232, 240, 0.85)" : operation.color ?? "transparent";
     if (operation.dash) ctx.setLineDash(operation.dash);
     const jitter = operation.jitter ?? 0;
     if (jitter) ctx.translate(this.stableOffset(operation.id, jitter), this.stableOffset(`${operation.id}-y`, jitter));
@@ -165,6 +179,11 @@ export class DrawingEngine {
     let hash = 0;
     for (const char of String(value)) hash = (hash * 31 + char.charCodeAt(0)) | 0;
     return ((Math.abs(hash) % 1000) / 1000 - 0.5) * range;
+  }
+
+  isDarkColor(color) {
+    const normalized = String(color ?? "").toLowerCase().replace(/\s+/g, "");
+    return ["black", "#000", "#000000", "#0f172a", "#111827"].includes(normalized);
   }
 
   save(filename = "voice-canvas-ai.png") {

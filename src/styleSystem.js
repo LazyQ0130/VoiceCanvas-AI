@@ -2,10 +2,10 @@ export const STYLE_PRESETS = {
   default: {
     name: "默认风格",
     lineWidth: 4,
-    shadowBlur: 0,
+    shadowBlur: 5,
     opacity: 1,
-    background: ["#f8fafc", "#e2e8f0"],
-    palette: ["#0f172a", "#2563eb", "#ef4444", "#f59e0b", "#16a34a", "#7c3aed"],
+    background: ["#07101f", "#0f1b32", "#111827"],
+    palette: ["#67e8f9", "#60a5fa", "#fb7185", "#fbbf24", "#4ade80", "#c084fc"],
   },
   neon: {
     name: "霓虹风格",
