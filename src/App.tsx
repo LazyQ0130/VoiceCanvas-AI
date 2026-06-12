@@ -86,7 +86,7 @@ export default function App() {
     setVoiceState("executing");
     aiGeneratingRef.current = true;
     setAiGenerating(true);
-    setExecutionResult("正在调用 FLUX 模型生成完整图片...");
+    setExecutionResult("正在调用 Kolors 模型生成完整图片...");
     try {
       const result = await generateAiImage(buildGenerationPrompt(prompt));
       const version: AiImageVersion = {
@@ -104,7 +104,7 @@ export default function App() {
       const message = `AI 图片生成完成，Seed ${version.seed}`;
       setExecutionResult(message);
       setLatency(Math.round(performance.now() - startedAt));
-      addHistoryItem("ai", rawText, message, 1, ["FLUX.1-schnell"]);
+      addHistoryItem("ai", rawText, message, 1, ["Kwai-Kolors/Kolors"]);
       setVoiceState("listening");
     } catch (error) {
       showError(error instanceof Error ? error.message : "AI 图片生成失败，请稍后重试");
@@ -310,7 +310,7 @@ export default function App() {
               <span>{localizeText(toolState.style)}</span>
             </> : <>
               <ImageIcon className="h-3.5 w-3.5 text-violet-300" />
-              <span className="font-bold text-slate-200">FLUX.1-schnell</span>
+              <span className="font-bold text-slate-200">Kwai-Kolors/Kolors</span>
               <span className="h-3 w-px bg-white/10" />
               <span>先描述，后生成</span>
             </>}

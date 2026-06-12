@@ -1,6 +1,6 @@
 # VoiceCanvas AI
 
-VoiceCanvas AI 是一个语音控制的双模式智能绘图工具。用户可以选择稳定可编辑的 Canvas 矢量模式，也可以调用硅基流动 FLUX 模型生成表现力更强的完整 AI 图片。
+VoiceCanvas AI 是一个语音控制的双模式智能绘图工具。用户可以选择稳定可编辑的 Canvas 矢量模式，也可以调用硅基流动 Kolors 模型生成表现力更强的完整 AI 图片。
 
 ## 核心亮点
 
@@ -32,8 +32,10 @@ npm run dev
 
 ```env
 SILICONFLOW_API_KEY=你的密钥
-SILICONFLOW_IMAGE_MODEL=black-forest-labs/FLUX.1-schnell
-SILICONFLOW_IMAGE_SIZE=1024x768
+SILICONFLOW_IMAGE_MODEL=Kwai-Kolors/Kolors
+SILICONFLOW_IMAGE_SIZE=1024x1024
+SILICONFLOW_INFERENCE_STEPS=20
+SILICONFLOW_GUIDANCE_SCALE=7.5
 ```
 
 部署到 Vercel 时，在项目环境变量中配置相同变量。不要提交真实 `.env` 或 API Key。
@@ -179,7 +181,7 @@ npm test
 
 ## 两天开发范围说明
 
-本项目优先保证本地可运行、演示稳定、架构清晰和核心交互完整。Canvas 模式使用可解释的中文规则解析器驱动智能矢量插画；AI 图片模式通过轻量安全代理调用托管的 FLUX 模型，但不在本地运行 Diffusion、ControlNet 或 LLM Agent。
+本项目优先保证本地可运行、演示稳定、架构清晰和核心交互完整。Canvas 模式使用可解释的中文规则解析器驱动智能矢量插画；AI 图片模式通过轻量安全代理调用硅基流动官方生图接口与 Kolors 模型，但不在本地运行 Diffusion、ControlNet 或 LLM Agent。
 
 ## 项目结构
 

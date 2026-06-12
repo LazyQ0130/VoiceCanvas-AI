@@ -100,7 +100,7 @@ export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerati
 
           <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/75 px-3 py-1.5 text-[10px] font-semibold text-slate-500 backdrop-blur-md">
             <Grid3X3 className="h-3 w-3" />
-            {drawingMode === "canvas" ? "960 × 620" : "1024 × 768"}
+            {drawingMode === "canvas" ? "960 × 620" : "1024 × 1024"}
           </div>
         </div>
       </div>

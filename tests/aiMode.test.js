@@ -35,7 +35,7 @@ test("AI history is independent and supports undo, redo, and clear", () => {
 });
 
 test("SiliconFlow provider sends the expected request and signs image URLs", async () => {
-  const env = { SILICONFLOW_API_KEY: "test-key", SILICONFLOW_IMAGE_MODEL: "test-model", SILICONFLOW_IMAGE_SIZE: "1024x768" };
+  const env = { SILICONFLOW_API_KEY: "test-key", SILICONFLOW_IMAGE_MODEL: "test-model", SILICONFLOW_IMAGE_SIZE: "1024x1024" };
   let requestBody;
   const result = await generateImage({
     prompt: "一座未来城市",
@@ -50,7 +50,15 @@ test("SiliconFlow provider sends the expected request and signs image URLs", asy
     },
   });
 
-  assert.deepEqual(requestBody, { model: "test-model", prompt: "一座未来城市", image_size: "1024x768", seed: 42 });
+  assert.deepEqual(requestBody, {
+    model: "test-model",
+    prompt: "一座未来城市",
+    image_size: "1024x1024",
+    batch_size: 1,
+    num_inference_steps: 20,
+    guidance_scale: 7.5,
+    seed: 42,
+  });
   assert.equal(result.inferenceMs, 321);
   const token = new URL(result.imageProxyUrl, "http://localhost").searchParams.get("token");
   assert.equal(verifyImageToken(token, env), "https://images.example/result.png");

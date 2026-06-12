@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const DEFAULT_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell";
-export const DEFAULT_IMAGE_SIZE = "1024x768";
+export const DEFAULT_IMAGE_MODEL = "Kwai-Kolors/Kolors";
+export const DEFAULT_IMAGE_SIZE = "1024x1024";
 export const MAX_PROMPT_LENGTH = 1800;
 const TOKEN_LIFETIME_MS = 10 * 60 * 1000;
 
@@ -65,6 +65,8 @@ export async function generateImage({ prompt, seed, env = process.env, fetchImpl
   const safeSeed = Number.isInteger(seed) && seed >= 0 ? seed : Math.floor(Math.random() * 1_000_000_000);
   const model = env.SILICONFLOW_IMAGE_MODEL || DEFAULT_IMAGE_MODEL;
   const imageSize = env.SILICONFLOW_IMAGE_SIZE || DEFAULT_IMAGE_SIZE;
+  const numInferenceSteps = Number(env.SILICONFLOW_INFERENCE_STEPS) || 20;
+  const guidanceScale = Number(env.SILICONFLOW_GUIDANCE_SCALE) || 7.5;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 75_000);
   const startedAt = Date.now();
@@ -76,7 +78,15 @@ export async function generateImage({ prompt, seed, env = process.env, fetchImpl
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ model, prompt: cleanPrompt, image_size: imageSize, seed: safeSeed }),
+      body: JSON.stringify({
+        model,
+        prompt: cleanPrompt,
+        image_size: imageSize,
+        batch_size: 1,
+        num_inference_steps: numInferenceSteps,
+        guidance_scale: guidanceScale,
+        seed: safeSeed,
+      }),
       signal: controller.signal,
     });
 

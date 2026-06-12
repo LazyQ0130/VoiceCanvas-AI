@@ -99,7 +99,7 @@ export function ControlSidebar({
               {aiDraftPrompt || "请说出画面描述，然后说“开始生成”"}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[9px] text-slate-500">
-              <span className="rounded-lg bg-white/[0.025] p-2">模型：FLUX.1-schnell</span>
+              <span className="rounded-lg bg-white/[0.025] p-2">模型：Kwai-Kolors/Kolors</span>
               <span className="rounded-lg bg-white/[0.025] p-2">版本：{aiHistory.versions.length}</span>
               <span className="rounded-lg bg-white/[0.025] p-2">种子：{aiHistory.current?.seed ?? "--"}</span>
               <span className="rounded-lg bg-white/[0.025] p-2">生成：{aiHistory.current?.inferenceMs ?? "--"} 毫秒</span>
