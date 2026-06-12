@@ -32,19 +32,22 @@ flowchart LR
   E --> UI[实时反馈与 Logger]
 ```
 
-数据流保持单向：语音控制器只产出文本；解析器只产出结构化指令；执行器将指令转换为操作组；历史管理器保存操作组快照；绘图引擎只负责渲染。
+界面层采用 React + TypeScript + Tailwind CSS，数据流保持单向：语音控制器只产出文本；解析器只产出结构化指令；执行器将指令转换为操作组；历史管理器保存操作组快照；绘图引擎只负责渲染。React 状态驱动语音反馈、历史树、对象检查器和九宫格显隐。
 
 ## 5. 模块说明
 
 | 模块 | 职责 |
 | --- | --- |
-| `main.js` | 应用装配、DOM 状态更新、计时与事件协调 |
+| `App.tsx` | 应用状态机、模块装配、语音状态与执行流程协调 |
+| `components/MainLayout.tsx` | 全屏主工作区与 320px 右侧控制台布局 |
+| `components/VoiceCanvas.tsx` | 自适应 Canvas 与 3×3 语音定位网格 |
+| `components/VoiceFeedbackBar.tsx` | idle/listening/processing/executing/error 状态反馈 |
+| `components/ControlSidebar.tsx` | 指令历史树、对象图层和意图监视器 |
 | `speechController.js` | 封装 Web Speech API、连续监听和错误回调 |
 | `commandParser.js` | 中文同义词、数字、参数和指令类型解析 |
 | `commandExecutor.js` | 补全默认参数、生成基础/复杂绘图操作 |
 | `drawingEngine.js` | 使用 Canvas API 渲染操作、导出 PNG |
 | `historyManager.js` | 操作组快照、撤销、重做和清空历史 |
-| `logger.js` | 安全渲染操作日志 |
 
 ## 6. 计划支持的指令能力
 
@@ -93,6 +96,9 @@ flowchart LR
 ## 11. 代码架构与质量说明
 
 - 使用 ES Module 拆分职责，避免全局变量和单文件堆积。
+- 使用 React + TypeScript 构建可预测的状态驱动界面，Tailwind CSS 管理响应式视觉系统。
+- 语音反馈栏完整覆盖待命、监听、理解、执行和错误五种状态，错误状态两秒后自动恢复。
+- 右侧控制台完全从真实历史操作组派生，不使用静态图层数据。
 - 解析器与绘图引擎解耦，便于独立测试和后续扩展。
 - 使用统一操作数据结构描述图形，重绘和历史恢复逻辑简单可控。
 - 历史管理器使用不可变快照思路，撤销/重做行为清晰。

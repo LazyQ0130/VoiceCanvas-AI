@@ -96,7 +96,11 @@ export class SpeechController {
     if (!this.supported) return;
     this.shouldRestart = false;
     this.clearStartTimer();
-    this.recognition.stop();
+    try {
+      this.recognition.stop();
+    } catch {
+      this.onStatusChange("stopped");
+    }
   }
 
   clearStartTimer() {
