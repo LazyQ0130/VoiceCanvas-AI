@@ -37,14 +37,16 @@ export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerati
       </div>
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
-        <div className="group relative aspect-[48/31] max-h-full w-full max-w-[1180px] overflow-hidden rounded-[26px] border border-white/10 bg-white shadow-[0_28px_90px_rgba(0,0,0,0.48),0_0_0_1px_rgba(56,189,248,0.05)]">
-          <canvas
-            ref={canvasRef}
-            width="960"
-            height="620"
-            aria-label="声绘智能画布绘图区"
-            className={`h-full w-full object-contain [image-rendering:auto] ${drawingMode === "ai" ? "invisible absolute inset-0" : ""}`}
-          />
+        <div className="group relative aspect-[48/31] max-h-full w-full max-w-[1180px] overflow-hidden rounded-[26px] border border-cyan-400/20 bg-[radial-gradient(circle_at_50%_35%,rgba(14,165,233,0.1),transparent_42%),linear-gradient(145deg,#07101f,#111827)] shadow-[0_28px_90px_rgba(0,0,0,0.48),0_0_0_1px_rgba(56,189,248,0.08)]">
+          <div className={`absolute inset-0 flex items-center justify-center p-0 ${drawingMode === "ai" ? "invisible" : ""}`}>
+            <canvas
+              ref={canvasRef}
+              width="960"
+              height="620"
+              aria-label="声绘智能画布绘图区"
+              className="h-full w-full object-contain [image-rendering:auto]"
+            />
+          </div>
           {drawingMode === "ai" && aiImage ? (
             <img
               src={aiImage.imageObjectUrl}
@@ -74,9 +76,9 @@ export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerati
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 rounded-[26px] ring-1 ring-inset ring-slate-950/10" />
-          <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur-md">
-            <Crosshair className="h-3 w-3 text-cyan-500" />
+          <div className="pointer-events-none absolute inset-0 rounded-[26px] ring-1 ring-inset ring-cyan-300/10" />
+          <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full border border-cyan-400/20 bg-slate-950/65 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-cyan-200/70 shadow-sm backdrop-blur-md">
+            <Crosshair className="h-3 w-3 text-cyan-400" />
             {drawingMode === "canvas" ? "语音定位已启用" : "AI 图片模式"}
           </div>
 
@@ -89,16 +91,16 @@ export function VoiceCanvas({ groups, showGrid, drawingMode, aiImage, aiGenerati
             {gridLabels.map((label) => (
               <div
                 key={label}
-                className="relative flex items-center justify-center border-b border-r border-cyan-500/20 last:border-r-0"
+                className="relative flex items-center justify-center border-b border-r border-cyan-400/15 last:border-r-0"
               >
-                <span className="rounded-md border border-cyan-500/20 bg-slate-950/10 px-2 py-1 text-[10px] font-black tracking-[0.2em] text-cyan-700/45 backdrop-blur-sm">
+                <span className="rounded-md border border-cyan-400/20 bg-slate-950/45 px-2 py-1 text-[10px] font-black tracking-[0.2em] text-cyan-300/40 backdrop-blur-sm">
                   {label}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/75 px-3 py-1.5 text-[10px] font-semibold text-slate-500 backdrop-blur-md">
+          <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-cyan-400/20 bg-slate-950/65 px-3 py-1.5 text-[10px] font-semibold text-cyan-200/65 backdrop-blur-md">
             <Grid3X3 className="h-3 w-3" />
             {drawingMode === "canvas" ? "960 × 620" : "1024 × 1024"}
           </div>

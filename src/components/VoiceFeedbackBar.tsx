@@ -62,7 +62,7 @@ export function VoiceFeedbackBar({
 
   return (
     <div
-      className={`absolute bottom-5 left-1/2 z-40 w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 rounded-2xl border bg-slate-900/82 p-2 shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl transition-all duration-300 sm:bottom-7 ${
+      className={`absolute bottom-5 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[1152px] -translate-x-1/2 rounded-[26px] border bg-[#0b1427]/95 p-3 shadow-[0_24px_70px_rgba(2,6,23,0.72)] backdrop-blur-2xl transition-all duration-300 sm:bottom-7 ${
         voiceState === "error"
           ? "animate-error-pulse border-rose-500/80"
           : active
@@ -70,23 +70,23 @@ export function VoiceFeedbackBar({
             : "border-white/10"
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <button
           type="button"
           disabled={!supported || voiceState === "processing" || voiceState === "executing"}
           onClick={active ? onStop : onStart}
-          className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/60 disabled:cursor-not-allowed disabled:opacity-45 ${
+          className={`relative flex h-[72px] w-[84px] shrink-0 items-center justify-center rounded-[20px] border transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/60 disabled:cursor-not-allowed disabled:opacity-45 ${
             active
               ? "border-rose-400/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25"
               : "border-cyan-400/30 bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/20"
           }`}
           aria-label={active ? "停止语音控制" : "开始语音控制"}
         >
-          {active ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-6 w-6" />}
+          {active ? <Square className="h-6 w-6 fill-current" /> : <Mic className="h-8 w-8" />}
           {active && <span className="absolute inset-0 -z-10 animate-ping rounded-xl border border-cyan-400/30" />}
         </button>
 
-        <div className="hidden border-r border-white/10 pr-3 sm:block">
+        <div className="hidden border-r border-white/10 pr-4 sm:block">
           {voiceState === "processing" ? (
             <div className="flex h-10 w-20 items-center justify-center">
               <span className="h-5 w-5 animate-breathe rounded-full bg-blue-400 shadow-[0_0_22px_rgba(96,165,250,0.75)]" />
@@ -111,14 +111,14 @@ export function VoiceFeedbackBar({
             ) : (
               <Radio className={`h-3.5 w-3.5 ${active ? "text-cyan-400" : "text-slate-500"}`} />
             )}
-            <p className="truncate text-sm font-bold text-slate-100">{copy.title}</p>
+            <p className="truncate text-base font-black text-slate-100">{copy.title}</p>
           </div>
-          <p className="mt-1 truncate text-xs text-slate-400">
+          <p className="mt-1 truncate text-sm text-slate-400">
             {active && transcript ? `“${transcript}”` : copy.detail}
           </p>
         </div>
 
-        <div className="hidden rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-right md:block">
+        <div className="hidden min-w-[102px] rounded-[18px] border border-white/10 bg-white/[0.035] px-4 py-3 text-right md:block">
           <p className="text-[9px] font-black tracking-[0.2em] text-slate-500">语音状态</p>
           <p className="mt-0.5 text-xs font-bold text-cyan-300">{voiceStateNames[voiceState]}</p>
         </div>
