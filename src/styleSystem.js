@@ -40,6 +40,32 @@ export const STYLE_PRESETS = {
     background: ["#fdf2f8", "#eef2ff"],
     palette: ["#f9a8d4", "#a5b4fc", "#93c5fd", "#86efac", "#fde68a", "#c4b5fd"],
   },
+  child: {
+    name: "儿童画风格",
+    lineWidth: 6,
+    shadowBlur: 0,
+    opacity: 1,
+    jitter: 3.2,
+    background: ["#dbeafe", "#fef9c3"],
+    palette: ["#2563eb", "#ef4444", "#f59e0b", "#22c55e", "#a855f7", "#ec4899"],
+  },
+  watercolor: {
+    name: "水彩风格",
+    lineWidth: 2,
+    shadowBlur: 9,
+    opacity: 0.58,
+    background: ["#eff6ff", "#fdf2f8"],
+    palette: ["#60a5fa", "#f9a8d4", "#86efac", "#fde68a", "#c4b5fd", "#67e8f9"],
+  },
+  pixel: {
+    name: "像素风格",
+    lineWidth: 4,
+    shadowBlur: 0,
+    opacity: 1,
+    pixelated: true,
+    background: ["#111827", "#1f2937"],
+    palette: ["#22d3ee", "#facc15", "#fb7185", "#4ade80", "#a78bfa", "#f8fafc"],
+  },
 };
 
 export function getStylePreset(style = "default") {

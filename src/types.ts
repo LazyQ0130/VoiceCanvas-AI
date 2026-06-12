@@ -24,10 +24,16 @@ export type CommandHistoryItem = {
   result: string;
   time: string;
   operationCount: number;
+  keywords?: string[];
 };
 
 export type ToolState = {
   color: string;
   lineWidth: number;
   style: string;
+  scene: string;
+  time: string;
+  weather: string;
+  tone: string;
+  keywords: string[];
 };

@@ -5,6 +5,7 @@ import { CommandExecutor } from "../src/commandExecutor.js";
 import { CommandParser } from "../src/commandParser.js";
 import { DrawingEngine } from "../src/drawingEngine.js";
 import { HistoryManager } from "../src/historyManager.js";
+import { OBJECT_LIBRARY } from "../src/objectLibrary.js";
 
 const parser = new CommandParser();
 
@@ -69,18 +70,15 @@ test("executor creates composite operations and restores a cleared canvas", () =
 });
 
 test("parses advanced scenes, styles, and last-object edits", () => {
-  assert.deepEqual(parser.parse("画一个夜晚城市"), {
-    valid: true,
-    type: "scene",
-    action: "drawScene",
-    scene: "nightCity",
-    rawText: "画一个夜晚城市",
-  });
+  const city = parser.parse("画一个夜晚城市");
+  assert.equal(city.action, "composeScene");
+  assert.equal(city.scene, "city");
+  assert.equal(city.time, "night");
   assert.equal(parser.parse("切换为霓虹风格").style, "neon");
   assert.equal(parser.parse("把最后一个图形向左移动").operation, "moveLeft");
   assert.equal(parser.parse("把最后一个图形变成蓝色").operation, "setColor");
-  assert.equal(parser.parse("画一个宇宙星空").scene, "starrySky");
-  assert.equal(parser.parse("画一个日落海滩").scene, "sunsetBeach");
+  assert.equal(parser.parse("画一个宇宙星空").scene, "space");
+  assert.equal(parser.parse("画一个日落海滩").scene, "beach");
   assert.equal(parser.parse("画一个森林").scene, "forest");
   assert.equal(parser.parse("画一个机器人").scene, "robot");
 });
@@ -135,8 +133,8 @@ test("drawing engine can render every advanced scene object type", () => {
   const gradient = { addColorStop() {} };
   const context = {
     save() {}, restore() {}, fillRect() {}, strokeRect() {}, beginPath() {}, moveTo() {},
-    lineTo() {}, stroke() {}, arc() {}, fill() {}, closePath() {}, roundRect() {},
-    setLineDash() {}, translate() {}, quadraticCurveTo() {}, createLinearGradient() { return gradient; },
+    lineTo() {}, stroke() {}, arc() {}, fill() {}, closePath() {}, roundRect() {}, rect() {},
+    ellipse() {}, bezierCurveTo() {}, setLineDash() {}, translate() {}, quadraticCurveTo() {}, createLinearGradient() { return gradient; },
   };
   const canvas = { width: 960, height: 620, getContext() { return context; } };
   const engine = new DrawingEngine(canvas);
@@ -148,4 +146,80 @@ test("drawing engine can render every advanced scene object type", () => {
 
   assert.doesNotThrow(() => engine.render(history.operations));
   assert.equal(history.operations.length, 5);
+});
+
+test("parses compositional scene, append, enrich, and global adjustment commands", () => {
+  const command = parser.parse("画一个夜晚校园，有月亮、星星、教学楼和树");
+  assert.equal(command.action, "composeScene");
+  assert.equal(command.scene, "campus");
+  assert.equal(command.time, "night");
+  assert.deepEqual(command.objects, ["moon", "stars", "tree", "campus", "schoolBuilding"]);
+
+  assert.deepEqual(parser.parse("再加一些花和气球").objects, ["flower", "balloon"]);
+  assert.equal(parser.parse("让画面更丰富一点").action, "enrichScene");
+  assert.equal(parser.parse("让画面更温暖").adjustment, "warmer");
+  assert.equal(parser.parse("切换为儿童画风格").style, "child");
+});
+
+test("composed scenes and appended objects are separate atomic history groups", () => {
+  const history = new HistoryManager();
+  const executor = new CommandExecutor({ drawingEngine: { save() {} }, historyManager: history, onToolChange() {} });
+  const composed = executor.execute(parser.parse("画一个夜晚校园，有月亮、星星、教学楼和树"));
+  const serialized = JSON.stringify(history.operations[0]);
+  assert.equal(composed.success, true);
+  assert.ok(composed.keywords.includes("校园"));
+  assert.ok(composed.operationCount > 20);
+  assert.equal(history.operations.length, 1);
+
+  const appended = executor.execute(parser.parse("再加一些花和气球"));
+  assert.equal(appended.success, true);
+  assert.equal(history.operations.length, 2);
+  assert.equal(history.undo(), true);
+  assert.equal(history.operations.length, 1);
+  assert.equal(JSON.stringify(history.operations[0]), serialized);
+});
+
+test("global styles and tone adjustments update or append stable history", () => {
+  const history = new HistoryManager();
+  const executor = new CommandExecutor({ drawingEngine: { save() {} }, historyManager: history, onToolChange() {} });
+  executor.execute(parser.parse("画一个公园，有树、花、草地和长椅"));
+  const styled = executor.execute(parser.parse("切换为儿童画风格"));
+  assert.ok(styled.operationCount > 0);
+  assert.ok(history.operations.flatMap((group) => group.operations).every((object) => object.style === "child"));
+  executor.execute(parser.parse("让画面更亮一点"));
+  assert.equal(history.operations.at(-1).operations[0].type, "toneOverlay");
+});
+
+test("parses diverse compositional requests from the supported vocabulary", () => {
+  const requests = [
+    "画一个有太阳、白云、草地、房子和小河的春天场景",
+    "画一个海边，有太阳、船和海鸥",
+    "画一个公园，有树、花、草地、长椅和小路",
+    "画一个太空场景，有星星、月亮、飞船和行星",
+    "画一个雨天城市，有道路、车、楼房和雨滴",
+    "画一个冬天雪景，有雪、房子、树和月亮",
+    "画一个儿童画风格的生日场景，有气球、笑脸、爱心和花",
+  ];
+  requests.forEach((request) => assert.equal(parser.parse(request).action, "composeScene"));
+  assert.equal(parser.parse(requests.at(-1)).style, "child");
+});
+
+test("drawing engine renders every object-library material", () => {
+  const gradient = { addColorStop() {} };
+  const context = {
+    save() {}, restore() {}, fillRect() {}, strokeRect() {}, beginPath() {}, moveTo() {},
+    lineTo() {}, stroke() {}, arc() {}, fill() {}, closePath() {}, roundRect() {}, rect() {},
+    ellipse() {}, bezierCurveTo() {}, setLineDash() {}, translate() {}, quadraticCurveTo() {},
+    createLinearGradient() { return gradient; },
+  };
+  const canvas = { width: 960, height: 620, getContext() { return context; } };
+  const engine = new DrawingEngine(canvas);
+  const operations = Object.keys(OBJECT_LIBRARY).map((objectType, index) => ({
+    id: `library-${index}`, type: "libraryObject", objectType, label: objectType,
+    x: 480, y: 350, width: 140, height: 140, color: "#0f172a", style: "default",
+    palette: ["#0f172a", "#2563eb", "#ef4444", "#f59e0b", "#16a34a", "#7c3aed"],
+    lineWidth: 3, opacity: 1, createdAt: "stable",
+  }));
+  assert.doesNotThrow(() => engine.render([{ label: "素材库", operations }]));
+  assert.equal(operations.length, Object.keys(OBJECT_LIBRARY).length);
 });

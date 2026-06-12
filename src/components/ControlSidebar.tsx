@@ -2,7 +2,8 @@ import { Box, Braces, CheckCircle2, Circle, Clock3, Layers3, Lightbulb, Minus, P
 import type { LucideIcon } from "lucide-react";
 
 import { localizeCommand, localizeText } from "../localization";
-import type { CommandHistoryItem, DrawOperation, OperationGroup } from "../types";
+import type { CommandHistoryItem, DrawOperation, OperationGroup, ToolState } from "../types";
+import { OBJECT_LIBRARY } from "../objectLibrary.js";
 
 type ControlSidebarProps = {
   commandHistory: CommandHistoryItem[];
@@ -11,6 +12,9 @@ type ControlSidebarProps = {
   executionResult: string;
   latency: number | null;
   currentStyle: string;
+  sceneContext: ToolState;
+  recognizedKeywords: string[];
+  generatedObjects: string[];
 };
 
 const shapeMeta: Record<string, { name: string; icon: LucideIcon }> = {
@@ -54,8 +58,12 @@ export function ControlSidebar({
   executionResult,
   latency,
   currentStyle,
+  sceneContext,
+  recognizedKeywords,
+  generatedObjects,
 }: ControlSidebarProps) {
   const objects = objectList(groups);
+  const weatherLabel = { clear: "晴朗", rain: "雨天", snow: "雪天" }[sceneContext.weather] ?? localizeText(sceneContext.weather);
 
   return (
     <aside className="relative z-30 hidden h-screen w-80 flex-col border-l border-white/8 bg-slate-950/75 backdrop-blur-2xl lg:flex">
@@ -110,6 +118,7 @@ export function ControlSidebar({
                       </span>
                       <time>{item.time}</time>
                     </div>
+                    {item.keywords?.length ? <p className="mt-1 truncate text-[9px] text-cyan-400/60">关键词：{item.keywords.join("、")}</p> : null}
                   </div>
                 </article>
               ))
@@ -166,10 +175,11 @@ export function ControlSidebar({
             <h2 className="text-[11px] font-black tracking-[0.16em] text-slate-300">高级语音示例</h2>
           </div>
           <div className="space-y-2 text-[10px] text-slate-400">
-            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">场景：“画一个夜晚城市”</p>
-            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">风格：“切换为霓虹风格”</p>
-            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">编辑：“把最后一个图形变大”</p>
+            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">组合：“画一个夜晚校园，有月亮、星星、教学楼和树”</p>
+            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">追加：“再加一些花和气球”</p>
+            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">调整：“让画面更温暖”</p>
           </div>
+          <p className="mt-3 text-[9px] leading-relaxed text-slate-600">可识别素材：{Object.values(OBJECT_LIBRARY).map((item) => item.label).join("、")}</p>
         </section>
 
         <section className="px-4 py-5">
@@ -191,6 +201,13 @@ export function ControlSidebar({
             </span>
           </div>
           <p className="mt-2 text-[10px] text-slate-500">当前风格：<span className="font-bold text-violet-300">{localizeText(currentStyle)}</span></p>
+          <div className="mt-2 grid grid-cols-3 gap-1 text-[9px] text-slate-500">
+            <span className="rounded bg-white/[0.025] p-1.5">场景：{localizeText(sceneContext.scene)}</span>
+            <span className="rounded bg-white/[0.025] p-1.5">时间：{localizeText(sceneContext.time)}</span>
+            <span className="rounded bg-white/[0.025] p-1.5">天气：{weatherLabel}</span>
+          </div>
+          <p className="mt-2 text-[9px] text-cyan-300/70">本次关键词：{recognizedKeywords.length ? recognizedKeywords.join("、") : "等待识别"}</p>
+          <p className="mt-1 truncate text-[9px] text-violet-300/65">本次生成：{generatedObjects.length ? `${generatedObjects.length} 个对象 · ${generatedObjects.slice(0, 4).join("、")}` : "等待生成"}</p>
         </section>
       </div>
     </aside>

@@ -1,4 +1,5 @@
 import { getStylePreset } from "./styleSystem.js";
+import { drawLibraryObject } from "./objectLibrary.js";
 
 export class DrawingEngine {
   constructor(canvas) {
@@ -9,7 +10,12 @@ export class DrawingEngine {
 
   render(groups) {
     const ctx = this.context;
-    const objects = groups.flatMap((group) => group.operations);
+    const layerOrder = { background: 0, far: 1, middle: 2, front: 3 };
+    const objects = groups.flatMap((group) => group.operations).sort((a, b) => {
+      const aLayer = a.type === "gradientBackground" ? -1 : a.type === "toneOverlay" ? 4 : layerOrder[a.layer] ?? 2;
+      const bLayer = b.type === "gradientBackground" ? -1 : b.type === "toneOverlay" ? 4 : layerOrder[b.layer] ?? 2;
+      return aLayer - bLayer;
+    });
     const activeStyle = objects.at(-1)?.style ?? "default";
     const background = getStylePreset(activeStyle).background;
     const gradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
@@ -29,8 +35,9 @@ export class DrawingEngine {
     ctx.strokeStyle = operation.color ?? "#0f172a";
     ctx.fillStyle = operation.fill ?? "transparent";
     ctx.lineWidth = operation.lineWidth ?? 3;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    ctx.lineCap = operation.pixelated ? "butt" : "round";
+    ctx.lineJoin = operation.pixelated ? "miter" : "round";
+    ctx.imageSmoothingEnabled = !operation.pixelated;
     ctx.shadowBlur = operation.shadowBlur ?? 0;
     ctx.shadowColor = operation.color ?? "transparent";
     if (operation.dash) ctx.setLineDash(operation.dash);
@@ -52,6 +59,8 @@ export class DrawingEngine {
       cloud: () => this.drawCloud(operation),
       tree: () => this.drawTree(operation),
       palm: () => this.drawPalm(operation),
+      libraryObject: () => drawLibraryObject(ctx, operation),
+      toneOverlay: () => this.drawToneOverlay(operation),
     };
     drawers[operation.type]?.();
     ctx.restore();
@@ -142,6 +151,14 @@ export class DrawingEngine {
       this.context.beginPath(); this.context.moveTo(x + 15, y - height);
       this.context.quadraticCurveTo(x + Math.sin(angle) * 80, y - height - 35, x + Math.sin(angle) * 120, y - height + 15); this.context.stroke();
     });
+  }
+
+  drawToneOverlay({ fill, opacity }) {
+    this.context.save();
+    this.context.globalAlpha = opacity ?? 0.15;
+    this.context.fillStyle = fill;
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.restore();
   }
 
   stableOffset(value, range) {

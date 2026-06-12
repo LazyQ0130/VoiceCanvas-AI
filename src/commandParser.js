@@ -1,3 +1,5 @@
+import { extractObjectKeywords, SCENE_ALIASES as COMPOSE_SCENE_ALIASES, SCENE_PRESETS } from "./objectLibrary.js";
+
 const COLOR_ALIASES = {
   red: ["红色", "红的", "红"],
   blue: ["蓝色", "蓝的", "蓝"],
@@ -37,6 +39,28 @@ const STYLE_ALIASES = {
   handDrawn: ["手绘风格", "手绘"],
   soft: ["柔和风格", "柔和"],
   default: ["默认风格", "默认"],
+  child: ["儿童画风格", "儿童画"],
+  watercolor: ["水彩风格", "水彩"],
+  pixel: ["像素风格", "像素"],
+};
+
+const TIME_ALIASES = {
+  night: ["夜晚", "夜景", "星夜"],
+  sunset: ["日落", "黄昏", "傍晚"],
+  day: ["白天", "晴天"],
+};
+
+const WEATHER_ALIASES = {
+  rain: ["雨天", "下雨", "雨滴"],
+  snow: ["雪天", "下雪", "雪景", "雪花"],
+  clear: ["晴天", "晴朗"],
+};
+
+const ADJUST_ALIASES = {
+  brighter: ["更亮一点", "亮一点"],
+  darker: ["更暗一点", "暗一点"],
+  warmer: ["更温暖", "暖一点"],
+  cooler: ["更冷一点", "冷一点"],
 };
 
 const EDIT_ALIASES = {
@@ -103,6 +127,13 @@ export class CommandParser {
     const action = findAlias(text, ACTION_ALIASES);
     if (action) return { valid: true, type: "action", action, rawText };
 
+    const adjustment = findAlias(text, ADJUST_ALIASES);
+    if (adjustment) return { valid: true, type: "adjust", action: "adjustScene", adjustment, rawText };
+
+    if (text.includes("丰富一点")) {
+      return { valid: true, type: "enrich", action: "enrichScene", rawText };
+    }
+
     const editOperation = findAlias(text, EDIT_ALIASES);
     if (editOperation) {
       return { valid: true, type: "edit", action: "editLastObject", operation: editOperation, rawText };
@@ -120,6 +151,38 @@ export class CommandParser {
       return style
         ? { valid: true, type: "style", action: "setStyle", style, rawText }
         : this.invalid("没有识别到目标绘图风格", rawText);
+    }
+
+    const objectKeywords = extractObjectKeywords(text);
+    const sceneContext = findAlias(text, COMPOSE_SCENE_ALIASES);
+    const isAppend = /^(再|继续)?加|再加|添加/.test(text);
+    const isCompose = (text.includes("画") || text.includes("生成")) &&
+      (objectKeywords.length >= 2 || (sceneContext && (text.includes("有") || objectKeywords.length > 0)));
+    if (isAppend && objectKeywords.length) {
+      return {
+        valid: true,
+        type: "append",
+        action: "appendObjects",
+        objects: objectKeywords,
+        rawText,
+      };
+    }
+    if (isCompose) {
+      const preset = SCENE_PRESETS[sceneContext] ?? {};
+      const time = findAlias(text, TIME_ALIASES) ?? preset.time ?? "day";
+      const weather = findAlias(text, WEATHER_ALIASES) ?? preset.weather ?? "clear";
+      const style = findAlias(text, STYLE_ALIASES);
+      return {
+        valid: true,
+        type: "compose",
+        action: "composeScene",
+        scene: sceneContext ?? "custom",
+        time,
+        weather,
+        style,
+        objects: objectKeywords,
+        rawText,
+      };
     }
 
     const scene = findAlias(text, SCENE_ALIASES);

@@ -24,7 +24,9 @@ export default function App() {
   const [parsedCommand, setParsedCommand] = useState<unknown>(null);
   const [executionResult, setExecutionResult] = useState("系统就绪，等待语音指令");
   const [latency, setLatency] = useState<number | null>(null);
-  const [toolState, setToolState] = useState<ToolState>({ color: "red", lineWidth: 4, style: "default" });
+  const [toolState, setToolState] = useState<ToolState>({ color: "red", lineWidth: 4, style: "default", scene: "custom", time: "day", weather: "clear", tone: "normal", keywords: [] });
+  const [recognizedKeywords, setRecognizedKeywords] = useState<string[]>([]);
+  const [generatedObjects, setGeneratedObjects] = useState<string[]>([]);
   const [supported, setSupported] = useState(true);
 
   const engineRef = useRef<DrawingEngine | null>(null);
@@ -63,6 +65,9 @@ export default function App() {
           }
 
           setExecutionResult(result.message);
+          const enrichedResult = result as typeof result & { keywords?: string[]; generatedObjects?: string[] };
+          if (enrichedResult.keywords) setRecognizedKeywords(enrichedResult.keywords);
+          if (enrichedResult.generatedObjects) setGeneratedObjects(enrichedResult.generatedObjects);
           setCommandHistory((current) => [
             {
               id: current.length + 1,
@@ -70,6 +75,7 @@ export default function App() {
               result: result.message,
               time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
               operationCount: result.operationCount ?? 0,
+              keywords: enrichedResult.keywords ?? [],
             },
             ...current,
           ]);
@@ -217,6 +223,9 @@ export default function App() {
           executionResult={executionResult}
           latency={latency}
           currentStyle={toolState.style}
+          sceneContext={toolState}
+          recognizedKeywords={recognizedKeywords}
+          generatedObjects={generatedObjects}
         />
       }
     />

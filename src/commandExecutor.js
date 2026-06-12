@@ -1,4 +1,6 @@
 import { createScene } from "./sceneFactory.js";
+import { layoutObjects } from "./layoutEngine.js";
+import { OBJECT_LIBRARY, objectLabels, SCENE_PRESETS } from "./objectLibrary.js";
 import { getStylePreset } from "./styleSystem.js";
 
 export class CommandExecutor {
@@ -7,7 +9,7 @@ export class CommandExecutor {
     this.historyManager = historyManager;
     this.onToolChange = onToolChange;
     this.nextObjectId = 1;
-    this.state = { color: "red", lineWidth: 4, style: "default" };
+    this.state = { color: "red", lineWidth: 4, style: "default", scene: "custom", time: "day", weather: "clear", tone: "normal", keywords: [] };
   }
 
   execute(command) {
@@ -15,6 +17,10 @@ export class CommandExecutor {
     if (command.type === "action") return this.executeAction(command.action);
     if (command.type === "setting") return this.executeSetting(command);
     if (command.type === "style") return this.executeStyle(command.style);
+    if (command.type === "compose") return this.executeCompose(command);
+    if (command.type === "append") return this.executeAppend(command);
+    if (command.type === "enrich") return this.executeEnrich(command);
+    if (command.type === "adjust") return this.executeAdjustment(command);
     if (command.type === "edit") return this.executeEdit(command);
     if (command.type === "scene") return this.executeScene(command);
     if (command.type === "composite") return this.executeComposite(command);
@@ -62,7 +68,28 @@ export class CommandExecutor {
     this.state.lineWidth = preset.lineWidth;
     this.state.color = preset.palette[0];
     this.notifyToolChange();
-    return { success: true, message: `已切换为${preset.name}`, operationCount: 0 };
+    const groups = this.historyManager.operations;
+    let updatedCount = 0;
+    if (groups.some((group) => group.operations.length)) {
+      const nextGroups = groups.map((group) => ({
+        ...group,
+        operations: group.operations.map((object) => {
+          updatedCount += 1;
+          return {
+            ...object,
+            style,
+            lineWidth: preset.lineWidth,
+            shadowBlur: preset.shadowBlur,
+            opacity: object.type === "toneOverlay" ? object.opacity : preset.opacity,
+            jitter: preset.jitter ?? 0,
+            palette: object.type === "libraryObject" ? preset.palette : object.palette,
+            colors: object.type === "gradientBackground" ? preset.background : object.colors,
+          };
+        }),
+      }));
+      this.historyManager.replaceOperations(nextGroups);
+    }
+    return { success: true, message: `已切换为${preset.name}${updatedCount ? `，更新 ${updatedCount} 个对象` : ""}`, operationCount: updatedCount, keywords: [preset.name], generatedObjects: [] };
   }
 
   executeDraw(command) {
@@ -97,8 +124,118 @@ export class CommandExecutor {
     });
     if (!operations.length) return { success: false, message: "暂时无法生成这个场景", operationCount: 0 };
     const sceneName = { nightCity: "夜晚城市", starrySky: "宇宙星空", sunsetBeach: "海边日落", forest: "森林", robot: "可爱机器人" }[command.scene];
+    this.state.scene = command.scene;
+    this.state.time = command.scene === "nightCity" || command.scene === "starrySky" ? "night" : command.scene === "sunsetBeach" ? "sunset" : "day";
+    this.state.weather = "clear";
+    this.state.keywords = [sceneName];
+    this.notifyToolChange();
     this.historyManager.addGroup({ label: `高级场景：${sceneName}`, operations });
-    return { success: true, message: `已生成${sceneName}，拆解为 ${operations.length} 个稳定对象`, operationCount: operations.length, recentObject: operations.at(-1) };
+    return { success: true, message: `已生成${sceneName}，拆解为 ${operations.length} 个稳定对象`, operationCount: operations.length, recentObject: operations.at(-1), keywords: [sceneName], generatedObjects: operations.map((item) => item.label) };
+  }
+
+  executeCompose(command) {
+    if (command.style) {
+      const stylePreset = getStylePreset(command.style);
+      this.state.style = command.style;
+      this.state.lineWidth = stylePreset.lineWidth;
+      this.state.color = stylePreset.palette[0];
+    }
+    const preset = SCENE_PRESETS[command.scene] ?? { label: "自定义场景", objects: [] };
+    const contextualObjects = [
+      ...(command.time === "night" ? ["moon", "stars"] : []),
+      ...(command.time === "sunset" ? ["sun"] : []),
+      ...(command.weather === "rain" ? ["cloud", "rain"] : []),
+      ...(command.weather === "snow" ? ["snow"] : []),
+    ];
+    const keys = [...new Set([...command.objects, ...(preset.objects ?? []), ...contextualObjects])];
+    if (!keys.length) return { success: false, message: "没有识别到可绘制的场景素材，请尝试说出太阳、房子、树等元素", operationCount: 0 };
+
+    this.state.scene = command.scene;
+    this.state.time = command.time;
+    this.state.weather = command.weather;
+    this.state.keywords = [...new Set([preset.label, ...objectLabels(command.objects), this.timeName(command.time), this.weatherName(command.weather)].filter(Boolean))];
+    this.notifyToolChange();
+
+    const operations = [
+      this.makeObject("gradientBackground", `${preset.label ?? "自定义"}背景`, { colors: this.backgroundFor(command), layer: "background" }),
+      ...this.createLibraryObjects(keys, command),
+    ];
+    this.historyManager.addGroup({ label: `组合场景：${preset.label ?? "自定义场景"}`, operations });
+    return {
+      success: true,
+      message: `识别关键词：${this.state.keywords.join("、")}；组合生成 ${operations.length} 个图层对象`,
+      operationCount: operations.length,
+      recentObject: operations.at(-1),
+      keywords: this.state.keywords,
+      generatedObjects: operations.map((item) => item.label),
+    };
+  }
+
+  executeAppend(command) {
+    const operations = this.createLibraryObjects(command.objects, this.state);
+    if (!operations.length) return { success: false, message: "没有识别到可以追加的素材", operationCount: 0 };
+    const labels = objectLabels(command.objects);
+    this.state.keywords = labels;
+    this.notifyToolChange();
+    this.historyManager.addGroup({ label: `追加素材：${labels.join("、")}`, operations });
+    return {
+      success: true,
+      message: `已追加${labels.join("、")}，生成 ${operations.length} 个对象`,
+      operationCount: operations.length,
+      recentObject: operations.at(-1),
+      keywords: labels,
+      generatedObjects: operations.map((item) => item.label),
+    };
+  }
+
+  executeEnrich() {
+    const choices = {
+      nightCity: ["stars", "car"],
+      starrySky: ["stars", "planet"],
+      sunsetBeach: ["bird", "boat"],
+      forest: ["flower", "cloud"],
+      campus: ["flower", "balloon", "person"],
+      park: ["flower", "balloon", "bird"],
+      beach: ["bird", "boat"],
+      city: ["car", "cloud"],
+      space: ["stars", "planet"],
+      custom: this.state.time === "night" ? ["stars"] : ["cloud", "flower"],
+    };
+    return this.executeAppend({ objects: choices[this.state.scene] ?? choices.custom });
+  }
+
+  executeAdjustment(command) {
+    const overlays = {
+      brighter: { color: "#ffffff", opacity: 0.16, label: "提亮滤镜" },
+      darker: { color: "#020617", opacity: 0.22, label: "暗化滤镜" },
+      warmer: { color: "#fb923c", opacity: 0.14, label: "暖色滤镜" },
+      cooler: { color: "#38bdf8", opacity: 0.13, label: "冷色滤镜" },
+    };
+    const overlay = overlays[command.adjustment];
+    this.state.tone = command.adjustment;
+    this.notifyToolChange();
+    const operation = this.makeObject("toneOverlay", overlay.label, { x: 480, y: 310, width: 960, height: 620, fill: overlay.color, color: overlay.color, opacity: overlay.opacity, layer: "front" });
+    this.historyManager.addGroup({ label: overlay.label, operations: [operation] });
+    return { success: true, message: `已应用${overlay.label}`, operationCount: 1, recentObject: operation, keywords: [overlay.label], generatedObjects: [overlay.label] };
+  }
+
+  createLibraryObjects(keys, context) {
+    const preset = getStylePreset(this.state.style);
+    return layoutObjects(keys, context).map((slot) => this.makeObject("libraryObject", slot.label, {
+      ...slot,
+      objectType: slot.key,
+      palette: preset.palette,
+      color: preset.palette[0],
+      layer: slot.layer,
+    }));
+  }
+
+  backgroundFor(command) {
+    if (command.time === "night" || command.scene === "space") return ["#020617", "#312e81"];
+    if (command.time === "sunset") return ["#7c3aed", "#fb7185", "#fbbf24"];
+    if (command.weather === "rain") return ["#475569", "#94a3b8"];
+    if (command.weather === "snow") return ["#dbeafe", "#f8fafc"];
+    return getStylePreset(this.state.style).background;
   }
 
   executeEdit(command) {
@@ -159,6 +296,7 @@ export class CommandExecutor {
       shadowBlur: cleanValues.shadowBlur ?? preset.shadowBlur,
       opacity: cleanValues.opacity ?? preset.opacity,
       jitter: cleanValues.jitter ?? preset.jitter ?? 0,
+      pixelated: cleanValues.pixelated ?? preset.pixelated ?? false,
       createdAt: new Date().toISOString(),
       ...cleanValues,
     };
@@ -222,6 +360,8 @@ export class CommandExecutor {
   }
 
   notifyToolChange() { this.onToolChange?.({ ...this.state }); }
+  timeName(time) { return { night: "夜晚", sunset: "日落", day: "白天" }[time]; }
+  weatherName(weather) { return { rain: "雨天", snow: "雪天", clear: "晴朗" }[weather]; }
   midpoint(a, b, fallback) { return Number.isFinite(a) && Number.isFinite(b) ? (a + b) / 2 : fallback; }
   randomCenter() { return { x: 480 + Math.round((Math.random() - 0.5) * 180), y: 310 + Math.round((Math.random() - 0.5) * 120) }; }
   shapeName(shape) { return { line: "线条", circle: "圆形", rectangle: "矩形", triangle: "三角形" }[shape]; }
