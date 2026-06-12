@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { CommandExecutor } from "../src/commandExecutor.js";
 import { CommandParser } from "../src/commandParser.js";
 import { DrawingEngine } from "../src/drawingEngine.js";
+import { getStylePreset } from "../src/styleSystem.js";
 import { HistoryManager } from "../src/historyManager.js";
 import { OBJECT_LIBRARY } from "../src/objectLibrary.js";
 
@@ -222,4 +223,11 @@ test("drawing engine renders every object-library material", () => {
   }));
   assert.doesNotThrow(() => engine.render([{ label: "素材库", operations }]));
   assert.equal(operations.length, Object.keys(OBJECT_LIBRARY).length);
+});
+
+test("default canvas surface uses a dark high-contrast palette", () => {
+  const preset = getStylePreset("default");
+  assert.deepEqual(preset.background, ["#07101f", "#0f1b32", "#111827"]);
+  assert.equal(preset.palette[0], "#67e8f9");
+  assert.ok(preset.shadowBlur > 0);
 });

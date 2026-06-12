@@ -53,11 +53,13 @@ export function VoiceFeedbackBar({
   onStart,
   onStop,
 }: VoiceFeedbackBarProps) {
-  const copy = voiceState === "executing" && drawingMode === "ai"
-    ? { title: "AI 正在生成完整图片...", detail: "正在调用 Kolors 模型，请稍候" }
-    : voiceState === "idle" && drawingMode === "ai"
-      ? { title: "AI 图片模式待命中...", detail: "先描述画面，再点击“确认并生成”" }
-      : stateCopy[voiceState];
+  const copy = !supported
+    ? { title: "当前浏览器不支持语音识别", detail: "请使用最新版 Chrome 或 Edge 打开本项目" }
+    : voiceState === "executing" && drawingMode === "ai"
+      ? { title: "AI 正在生成完整图片...", detail: "正在调用 Kolors 模型，请稍候" }
+      : voiceState === "idle" && drawingMode === "ai"
+        ? { title: "AI 图片模式待命中...", detail: "先描述画面，再点击“确认并生成”" }
+        : stateCopy[voiceState];
   const active = voiceState === "listening";
 
   return (

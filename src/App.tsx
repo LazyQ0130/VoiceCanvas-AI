@@ -125,7 +125,6 @@ export default function App() {
     lastExecutedTranscriptRef.current = { text: normalizedTranscript, at: now };
     const startedAt = performance.now();
     setTranscript(finalTranscript);
-    setVoiceState("processing");
 
     const modeCommand = parseModeCommand(finalTranscript);
     if (modeCommand) {
@@ -138,9 +137,10 @@ export default function App() {
 
     if (drawingModeRef.current === "ai") {
       if (aiGeneratingRef.current) {
-        showError("AI 图片正在生成中，请等待当前任务完成");
+        setExecutionResult("AI 图片正在生成中，已忽略本次语音输入");
         return;
       }
+      setVoiceState("processing");
       const command = parseAiCommand(finalTranscript);
       setParsedCommand(command);
       if (command.type === "promptDraft") {
@@ -201,6 +201,7 @@ export default function App() {
       return;
     }
 
+    setVoiceState("processing");
     const command = parser.parse(finalTranscript);
     setParsedCommand(command);
     setVoiceState("executing");
@@ -300,7 +301,7 @@ export default function App() {
             <Mic2 className="h-5 w-5 text-cyan-300" />
             <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-emerald-400" />
           </div>
-          <div>
+          <div className="hidden sm:block">
             <h1 className="text-lg font-black tracking-tight text-white">
               声绘智能画布
             </h1>

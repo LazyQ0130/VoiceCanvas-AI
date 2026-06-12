@@ -89,7 +89,7 @@ export function VoiceCanvas({
             </div>
           )}
           {drawingMode === "ai" && !aiGenerating && (
-            <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
+            <div className="absolute right-3 top-3 z-30 flex origin-top-right items-center gap-2 sm:right-4 sm:top-4">
               {aiImage && (
                 <button
                   type="button"
@@ -129,7 +129,7 @@ export function VoiceCanvas({
                 key={label}
                 className="relative flex items-center justify-center border-b border-r border-cyan-400/15 last:border-r-0"
               >
-                <span className="rounded-md border border-cyan-400/20 bg-slate-950/45 px-2 py-1 text-[10px] font-black tracking-[0.2em] text-cyan-300/40 backdrop-blur-sm">
+                <span className="hidden rounded-md border border-cyan-400/20 bg-slate-950/45 px-2 py-1 text-[10px] font-black tracking-[0.2em] text-cyan-300/40 backdrop-blur-sm sm:inline-flex">
                   {label}
                 </span>
               </div>
