@@ -23,6 +23,33 @@ const ACTION_ALIASES = {
   save: ["保存图片", "导出图片", "下载图片", "保存", "导出", "下载"],
 };
 
+const SCENE_ALIASES = {
+  nightCity: ["城市夜景", "夜晚城市", "一座城市", "一个城市", "城市"],
+  starrySky: ["宇宙星空", "一片星空", "星空", "宇宙"],
+  sunsetBeach: ["海边日落", "日落海滩", "日落", "海边", "海滩"],
+  forest: ["一片森林", "一个森林", "森林", "树林"],
+  robot: ["可爱的机器人", "机器人"],
+};
+
+const STYLE_ALIASES = {
+  neon: ["霓虹风格", "霓虹"],
+  minimal: ["极简风格", "极简"],
+  handDrawn: ["手绘风格", "手绘"],
+  soft: ["柔和风格", "柔和"],
+  default: ["默认风格", "默认"],
+};
+
+const EDIT_ALIASES = {
+  delete: ["删除最后一个图形", "删除最后一个", "删掉最后一个"],
+  duplicate: ["复制最后一个图形", "复制最后一个"],
+  scaleUp: ["最后一个图形变大", "最后一个变大"],
+  scaleDown: ["最后一个图形变小", "最后一个变小"],
+  moveLeft: ["最后一个图形向左移动", "最后一个向左移动"],
+  moveRight: ["最后一个图形向右移动", "最后一个向右移动"],
+  moveUp: ["最后一个图形向上移动", "最后一个向上移动"],
+  moveDown: ["最后一个图形向下移动", "最后一个向下移动"],
+};
+
 const CHINESE_DIGITS = {
   零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4,
   五: 5, 六: 6, 七: 7, 八: 8, 九: 9,
@@ -75,6 +102,30 @@ export class CommandParser {
 
     const action = findAlias(text, ACTION_ALIASES);
     if (action) return { valid: true, type: "action", action, rawText };
+
+    const editOperation = findAlias(text, EDIT_ALIASES);
+    if (editOperation) {
+      return { valid: true, type: "edit", action: "editLastObject", operation: editOperation, rawText };
+    }
+
+    if (text.includes("最后一个") && text.includes("变成")) {
+      const color = extractColor(text);
+      return color
+        ? { valid: true, type: "edit", action: "editLastObject", operation: "setColor", color, rawText }
+        : this.invalid("没有识别到要修改成的颜色", rawText);
+    }
+
+    if (text.includes("切换") && (text.includes("风格") || findAlias(text, STYLE_ALIASES))) {
+      const style = findAlias(text, STYLE_ALIASES);
+      return style
+        ? { valid: true, type: "style", action: "setStyle", style, rawText }
+        : this.invalid("没有识别到目标绘图风格", rawText);
+    }
+
+    const scene = findAlias(text, SCENE_ALIASES);
+    if (scene && (text.includes("画") || text.includes("生成"))) {
+      return { valid: true, type: "scene", action: "drawScene", scene, rawText };
+    }
 
     if (text.includes("设置颜色") || text.includes("颜色为") || text.includes("换成")) {
       const color = extractColor(text);

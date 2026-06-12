@@ -1,9 +1,15 @@
 export type VoiceState = "idle" | "listening" | "processing" | "executing" | "error";
 
 export type DrawOperation = {
-  type: "line" | "circle" | "rectangle" | "triangle" | "arc";
+  id: string;
+  type: string;
+  label: string;
+  x: number;
+  y: number;
   color?: string;
   lineWidth?: number;
+  style: string;
+  createdAt: string;
   [key: string]: unknown;
 };
 
@@ -23,4 +29,5 @@ export type CommandHistoryItem = {
 export type ToolState = {
   color: string;
   lineWidth: number;
+  style: string;
 };

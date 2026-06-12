@@ -1,4 +1,5 @@
-import { Box, Braces, CheckCircle2, Circle, Clock3, Layers3, Minus, Pentagon, Square } from "lucide-react";
+import { Box, Braces, CheckCircle2, Circle, Clock3, Layers3, Lightbulb, Minus, Pentagon, Square } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { localizeCommand, localizeText } from "../localization";
 import type { CommandHistoryItem, DrawOperation, OperationGroup } from "../types";
@@ -9,15 +10,25 @@ type ControlSidebarProps = {
   parsedCommand: unknown;
   executionResult: string;
   latency: number | null;
+  currentStyle: string;
 };
 
-const shapeMeta = {
+const shapeMeta: Record<string, { name: string; icon: LucideIcon }> = {
   circle: { name: "圆形", icon: Circle },
   rectangle: { name: "矩形", icon: Square },
   triangle: { name: "三角形", icon: Pentagon },
   line: { name: "线条", icon: Minus },
   arc: { name: "圆弧", icon: Minus },
-} as const;
+  gradientBackground: { name: "渐变背景", icon: Layers3 },
+  star: { name: "星点", icon: Circle },
+  roundedRectangle: { name: "圆角矩形", icon: Square },
+  polygon: { name: "多边形", icon: Pentagon },
+  mountain: { name: "山丘", icon: Pentagon },
+  wave: { name: "波浪", icon: Minus },
+  cloud: { name: "云朵", icon: Circle },
+  tree: { name: "树木", icon: Pentagon },
+  palm: { name: "椰子树", icon: Pentagon },
+};
 
 function objectList(groups: OperationGroup[]) {
   const counts: Record<string, number> = {};
@@ -27,7 +38,7 @@ function objectList(groups: OperationGroup[]) {
       const meta = shapeMeta[operation.type] ?? { name: "对象", icon: Box };
       return {
         id: `${groupIndex}-${operation.type}-${counts[operation.type]}`,
-        name: `${meta.name} #${counts[operation.type]}`,
+        name: operation.label || `${meta.name} #${counts[operation.type]}`,
         wakeWord: `${meta.name}${counts[operation.type]}号`,
         color: String(operation.color ?? "black"),
         icon: meta.icon,
@@ -42,6 +53,7 @@ export function ControlSidebar({
   parsedCommand,
   executionResult,
   latency,
+  currentStyle,
 }: ControlSidebarProps) {
   const objects = objectList(groups);
 
@@ -148,6 +160,18 @@ export function ControlSidebar({
           </div>
         </section>
 
+        <section className="border-b border-white/8 px-4 py-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Lightbulb className="h-3.5 w-3.5 text-amber-300" />
+            <h2 className="text-[11px] font-black tracking-[0.16em] text-slate-300">高级语音示例</h2>
+          </div>
+          <div className="space-y-2 text-[10px] text-slate-400">
+            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">场景：“画一个夜晚城市”</p>
+            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">风格：“切换为霓虹风格”</p>
+            <p className="rounded-lg border border-white/6 bg-white/[0.025] px-2.5 py-2">编辑：“把最后一个图形变大”</p>
+          </div>
+        </section>
+
         <section className="px-4 py-5">
           <div className="mb-3 flex items-center gap-2">
             <Braces className="h-3.5 w-3.5 text-blue-400" />
@@ -166,6 +190,7 @@ export function ControlSidebar({
               {latency ?? "--"} 毫秒
             </span>
           </div>
+          <p className="mt-2 text-[10px] text-slate-500">当前风格：<span className="font-bold text-violet-300">{localizeText(currentStyle)}</span></p>
         </section>
       </div>
     </aside>

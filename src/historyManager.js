@@ -24,6 +24,13 @@ export class HistoryManager {
     this.notify();
   }
 
+  replaceOperations(operations) {
+    this.snapshots = this.snapshots.slice(0, this.index + 1);
+    this.snapshots.push(operations);
+    this.index += 1;
+    this.notify();
+  }
+
   undo() {
     if (this.index === 0) return false;
     this.index -= 1;

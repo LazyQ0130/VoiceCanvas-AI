@@ -24,7 +24,7 @@ export default function App() {
   const [parsedCommand, setParsedCommand] = useState<unknown>(null);
   const [executionResult, setExecutionResult] = useState("系统就绪，等待语音指令");
   const [latency, setLatency] = useState<number | null>(null);
-  const [toolState, setToolState] = useState<ToolState>({ color: "red", lineWidth: 4 });
+  const [toolState, setToolState] = useState<ToolState>({ color: "red", lineWidth: 4, style: "default" });
   const [supported, setSupported] = useState(true);
 
   const engineRef = useRef<DrawingEngine | null>(null);
@@ -55,7 +55,6 @@ export default function App() {
         window.setTimeout(() => {
           const result = executorRef.current?.execute(command);
           const elapsed = Math.round(performance.now() - startedAt);
-          const lastGroup = (historyRef.current.operations as OperationGroup[]).at(-1);
           setLatency(elapsed);
 
           if (!result?.success) {
@@ -70,12 +69,7 @@ export default function App() {
               command: finalTranscript,
               result: result.message,
               time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
-              operationCount:
-                command.type === "draw"
-                  ? 1
-                  : command.type === "composite"
-                    ? lastGroup?.operations.length ?? 0
-                    : 0,
+              operationCount: result.operationCount ?? 0,
             },
             ...current,
           ]);
@@ -142,6 +136,9 @@ export default function App() {
     setVoiceState("idle");
   }, []);
 
+  const objects = groups.flatMap((group) => group.operations);
+  const recentObjectName = objects.at(-1)?.label ?? "暂无对象";
+
   const workspace = (
     <div className="relative flex h-full min-w-0 flex-col">
       <header className="relative z-30 flex h-[76px] shrink-0 items-center justify-between border-b border-white/8 px-5 sm:px-7">
@@ -166,6 +163,13 @@ export default function App() {
             <span className="font-bold text-slate-200">{localizeText(toolState.color)}</span>
             <span className="h-3 w-px bg-white/10" />
             <span>线宽 {toolState.lineWidth}</span>
+            <span className="h-3 w-px bg-white/10" />
+            <span>{localizeText(toolState.style)}</span>
+          </div>
+          <div className="hidden rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-[10px] text-slate-400 xl:block">
+            <span className="font-bold text-cyan-300">{objects.length}</span> 个对象
+            <span className="mx-2 text-slate-700">·</span>
+            最近：<span className="font-bold text-slate-200">{recentObjectName}</span>
           </div>
           <button
             type="button"
@@ -197,7 +201,7 @@ export default function App() {
 
       <div className="pointer-events-none absolute bottom-7 left-7 hidden items-center gap-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600 xl:flex">
         <Sparkles className="h-3 w-3 text-violet-400/70" />
-        试着说：“画一个房子”
+        试着说：“画一个夜晚城市”
       </div>
     </div>
   );
@@ -212,6 +216,7 @@ export default function App() {
           parsedCommand={parsedCommand}
           executionResult={executionResult}
           latency={latency}
+          currentStyle={toolState.style}
         />
       }
     />
