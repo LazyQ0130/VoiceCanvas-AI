@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AiHistoryManager } from "./aiHistoryManager.js";
 import { generateAiImage, saveAiImage } from "./aiImageClient.js";
-import { buildGenerationPrompt, mergePrompt, parseAiCommand, parseModeCommand } from "./aiPromptController.js";
+import { buildGenerationPrompt, isImmediateAiAction, mergePrompt, parseAiCommand, parseModeCommand } from "./aiPromptController.js";
 import { CommandExecutor } from "./commandExecutor.js";
 import { CommandParser } from "./commandParser.js";
 import { ControlSidebar } from "./components/ControlSidebar";
@@ -44,6 +44,8 @@ export default function App() {
   const drawingModeRef = useRef<DrawingMode>("canvas");
   const aiDraftRef = useRef("");
   const aiGeneratingRef = useRef(false);
+  const interimActionTimerRef = useRef<number | null>(null);
+  const lastExecutedTranscriptRef = useRef({ text: "", at: 0 });
   const historyRef = useRef(
     new HistoryManager((nextGroups: OperationGroup[]) => setGroups([...nextGroups])),
   );
@@ -115,6 +117,18 @@ export default function App() {
   }, [addHistoryItem, showError]);
 
   const executeTranscript = useCallback(async (finalTranscript: string) => {
+    const normalizedTranscript = finalTranscript.replace(/\s+/g, "").trim();
+    const now = Date.now();
+    if (
+      lastExecutedTranscriptRef.current.text === normalizedTranscript &&
+      now - lastExecutedTranscriptRef.current.at < 2500
+    ) return;
+    lastExecutedTranscriptRef.current = { text: normalizedTranscript, at: now };
+    if (interimActionTimerRef.current) {
+      window.clearTimeout(interimActionTimerRef.current);
+      interimActionTimerRef.current = null;
+    }
+
     const startedAt = performance.now();
     setTranscript(finalTranscript);
     setVoiceState("processing");
@@ -218,7 +232,17 @@ export default function App() {
     const speech = new SpeechController({
       onResult: (text: string, isFinal: boolean) => {
         setTranscript(text);
-        if (isFinal) executeTranscript(text);
+        if (isFinal) {
+          executeTranscript(text);
+          return;
+        }
+        if (drawingModeRef.current === "ai" && isImmediateAiAction(text)) {
+          if (interimActionTimerRef.current) window.clearTimeout(interimActionTimerRef.current);
+          interimActionTimerRef.current = window.setTimeout(() => executeTranscript(text), 550);
+        } else if (interimActionTimerRef.current) {
+          window.clearTimeout(interimActionTimerRef.current);
+          interimActionTimerRef.current = null;
+        }
       },
       onStatusChange: (status: string) => {
         if (status === "listening") setVoiceState("listening");
@@ -245,6 +269,7 @@ export default function App() {
     return () => {
       speech.stop();
       if (errorTimerRef.current) window.clearTimeout(errorTimerRef.current);
+      if (interimActionTimerRef.current) window.clearTimeout(interimActionTimerRef.current);
       aiHistoryRef.current.versions.forEach((version: AiImageVersion) => URL.revokeObjectURL(version.imageObjectUrl));
     };
   }, [executeTranscript, showError]);

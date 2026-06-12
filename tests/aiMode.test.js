@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { AiHistoryManager } from "../src/aiHistoryManager.js";
-import { buildGenerationPrompt, mergePrompt, parseAiCommand, parseModeCommand } from "../src/aiPromptController.js";
+import { buildGenerationPrompt, isImmediateAiAction, mergePrompt, parseAiCommand, parseModeCommand } from "../src/aiPromptController.js";
 import { createImageToken, generateImage, verifyImageToken } from "../server/aiProvider.js";
 import { handleGenerateImage, handleImageProxy } from "../server/apiHandlers.js";
 
@@ -13,6 +13,8 @@ test("AI voice commands switch modes and defer generation until confirmation", (
   assert.equal(parseAiCommand("开始生成").action, "generate");
   assert.equal(parseAiCommand("重新生成").action, "regenerate");
   assert.equal(parseAiCommand("取消本次修改").action, "cancelDraft");
+  assert.equal(isImmediateAiAction("开始生成"), true);
+  assert.equal(isImmediateAiAction("画一座未来城市"), false);
 });
 
 test("AI prompt additions merge without invoking a provider", () => {
@@ -79,6 +81,14 @@ test("API handlers map missing keys and proxy valid generated images", async () 
   assert.equal(proxied.status, 200);
   assert.equal(proxied.contentType, "image/png");
   assert.deepEqual([...proxied.bytes], [1, 2, 3]);
+
+  const octetStream = await handleImageProxy({
+    token,
+    env,
+    fetchImpl: async () => new Response(new Uint8Array([4, 5, 6]), { status: 200, headers: { "Content-Type": "application/octet-stream" } }),
+  });
+  assert.equal(octetStream.status, 200);
+  assert.equal(octetStream.contentType, "image/png");
 
   const rejected = await handleImageProxy({ token: `${token}broken`, env });
   assert.equal(rejected.status, 401);

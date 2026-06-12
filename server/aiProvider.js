@@ -123,8 +123,11 @@ export async function fetchGeneratedImage({ token, env = process.env, fetchImpl 
   const url = verifyImageToken(token, env);
   const response = await fetchImpl(url, { signal: AbortSignal.timeout(20_000) });
   if (!response.ok) throw providerError(502, "无法读取生成图片，请重新生成", "image_fetch_failed");
-  const contentType = response.headers.get("content-type") || "image/png";
-  if (!contentType.startsWith("image/")) throw providerError(502, "生成结果不是有效图片", "invalid_image");
+  const upstreamType = response.headers.get("content-type") || "";
+  const contentType = upstreamType.startsWith("image/") ? upstreamType : "image/png";
+  if (upstreamType && !upstreamType.startsWith("image/") && !upstreamType.includes("octet-stream")) {
+    throw providerError(502, "生成结果不是有效图片", "invalid_image");
+  }
   return { bytes: Buffer.from(await response.arrayBuffer()), contentType };
 }
 

@@ -33,6 +33,19 @@ export function parseAiCommand(rawText) {
   return { type: "promptDraft", text: rawText.trim(), rawText };
 }
 
+export function isImmediateAiAction(rawText) {
+  const command = parseAiCommand(rawText);
+  return command.type === "aiAction" && [
+    "generate",
+    "regenerate",
+    "undo",
+    "redo",
+    "clear",
+    "save",
+    "cancelDraft",
+  ].includes(command.action);
+}
+
 export function mergePrompt(basePrompt, addition) {
   const cleanBase = basePrompt.trim();
   const cleanAddition = addition.trim();
